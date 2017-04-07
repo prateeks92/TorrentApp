@@ -1,4 +1,10 @@
+package peer2peer;
 
+
+import MsgDetails;
+import PeerDetails;
+import PeerHandle;
+import Server;
 
 import java.io.IOException;
 import java.net.Socket;

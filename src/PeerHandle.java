@@ -4,6 +4,8 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 
+import peer2peer.Starter;
+
 public class PeerHandle implements Runnable{
 	
 	

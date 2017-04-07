@@ -15,35 +15,25 @@ import java.util.logging.SimpleFormatter;
  */
 public class SimpleLogger extends Logger{
 	
-
-	private String logFileName;
-
-	public static SimpleLogger logger = null;
-	
-
-	private FileHandler fileHandler;
-	
-	
-	private String peerID;
-	
-	
-	private SimpleDateFormat formatter = null;
+	private String peerId;	
+	private SimpleDateFormat sdf = null;
+	private String log_file;	
+	private FileHandler fh;
 		
-	
-	public SimpleLogger(String peerID, String logFileName, String name) {
+	//constructor
+	public SimpleLogger(String peerID, String log_file, String name) {
 		super(name, null);
-		this.logFileName = logFileName;
+		this.log_file = log_file;
 		this.setLevel(Level.FINEST);
-		this.peerID = peerID;
+		this.peerId = peerID;
 	}
 	
 	
-	public void initialize() throws SecurityException, IOException{
-
-		fileHandler = new FileHandler(logFileName);
-		fileHandler.setFormatter(new SimpleFormatter());
-		formatter = new SimpleDateFormat("E, dd MMM yyyy hh:mm:ss a");
-		this.addHandler(fileHandler);
+	public void createLog() {
+		fh = new FileHandler(log_file);
+		fh.setFormatter(new SimpleFormatter());
+		sdf = new SimpleDateFormat("E, dd MMM yyyy hh:mm:ss a");
+		this.addHandler();
 	}
 
 	
