@@ -4,34 +4,32 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.Map;
+
+import beanClasses.PeerDetail;
 
 
 public class PeerProperties {
-public LinkedHashMap<String,PeerDetail> peerDetailsMap = null;
 	
-	private static Configurations  PeerConfiguration = null;
+public Map<String,PeerDetail> peerDetailMap = null;
 	
-	private Configurations(){
-		
-	}
+private static PeerProperties  PeerConfiguration = null;
+
 	
-	public static Configurations createInstance(){
+	public static PeerProperties createInstance(){
 		if( PeerConfiguration == null){
-			 PeerConfiguration = new  Configurations();
-			 PeerConfiguration.initialize();
+			 PeerConfiguration = new  PeerProperties();
+			 PeerConfiguration.populate();
 		}
 		return  PeerConfiguration;
 	}
 	
-	public boolean initialize(){
-		
-		
+	public boolean populate(){		
 		try {
 
 			BufferedReader configFileReader =  new BufferedReader(new InputStreamReader(new FileInputStream(Constants.PEER_INFO_FILE)));
 			
-			peerDetailsMap = new LinkedHashMap<String,PeerDetail>();
+			peerDetailMap = new HashMap<String,PeerDetail>();
 			
 			String line = configFileReader.readLine();
 			
@@ -40,20 +38,19 @@ public LinkedHashMap<String,PeerDetail> peerDetailsMap = null;
 				peerInfoInstance = new PeerDetail();
 				String tokens[] = line.trim().split(" ");
 				peerInfoInstance.setPeerID(tokens[0]);
-				peerInfoInstance.setHostAddress(tokens[1]);
-				peerInfoInstance.setPortNumber(Integer.parseInt(tokens[2]));
+				peerInfoInstance.setPeerAddress(tokens[1]);
+				peerInfoInstance.setPeerPort(Integer.parseInt(tokens[2]));
 				
 				if(tokens[3].equals("1")){
-					peerInfoInstance.setFileExists(true);
+					peerInfoInstance.setFileExist(true);
 				}else{
-					peerInfoInstance.setFileExists(false);
+					peerInfoInstance.setFileExist(false);
 				}
 				
-				peerDetailsMap.put(tokens[0],peerInfoInstance);
+				peerDetailMap.put(tokens[0],peerInfoInstance);
 				
 				line = configFileReader.readLine();
-			}
-			
+			}			
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -63,8 +60,8 @@ public LinkedHashMap<String,PeerDetail> peerDetailsMap = null;
 		return true;
 	}
 	
-	public HashMap<String, PeerDetail> getPeerInfoMap() {
-		return peerDetailsMap;
+	public Map<String, PeerDetail> getPeerInfoMap() {
+		return peerDetailMap;
 	}
 
 }
