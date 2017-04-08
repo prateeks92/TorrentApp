@@ -62,7 +62,7 @@ public class unchoking implements Runnable{
 		if(choked.size() > 0)
 		{
 			Random random = new Random();
-			threadController.optimisticUnchokeOnePeer(choked.get(random.nextInt(choked.size())));
+			threadController.unchokePeer(choked.get(random.nextInt(choked.size())));
 		}
 		
 		threadController.checkAllPeersFileDownloadComplete();

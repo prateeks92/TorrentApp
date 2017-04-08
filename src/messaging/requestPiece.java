@@ -5,7 +5,7 @@ import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import beanClasses.bitField;
+import beanClasses.*;
 import messaging.*;
 import property.*;
 import peer2peer.*;
@@ -14,7 +14,7 @@ public class requestPiece implements Runnable
 {	
 	private static String LOGGER_PREFIX = requestPiece.class.getSimpleName();
 	
-	public BlockingQueue<MsgDetails> messageQueue;
+	public BlockingQueue<messageDefine> messageQueue;
 	
 	private boolean isShutDown = false;
 	
@@ -39,7 +39,7 @@ public class requestPiece implements Runnable
 		
 		requestPiece requestSender = new requestPiece();
 		
-		requestSender.messageQueue = new ArrayBlockingQueue<MsgDetails>(Constants.SENDER_SIZE_QUEUE);
+		requestSender.messageQueue = new ArrayBlockingQueue<messageDefine>(Constants.SENDER_SIZE_QUEUE);
 
 		int pieceSize = Integer.parseInt(PeerPropertyTokens.returnPropertyValue("PieceSize"));
 		int nPieces = (int) Math.ceil(Integer.parseInt(PeerPropertyTokens.returnPropertyValue("FileSize")) / (pieceSize*1.0));
@@ -86,13 +86,13 @@ public class requestPiece implements Runnable
 		{
 			try 
 			{				
-				MsgDetails message = messageQueue.take();
+				messageDefine message = messageQueue.take();
 				System.out.println(LOGGER_PREFIX+": Received Message: "+Constants.getMessageName(message.returnMsgType()));
 				
-				MsgDetails requestMessage = MsgDetails.createInstance();
+				messageDefine requestMessage = messageDefine.createInstance();
 				requestMessage.setMessgageType(Constants.MESSAGE_REQUEST);
 				
-				MsgDetails interestedMessage = MsgDetails.createInstance();
+				messageDefine interestedMessage = messageDefine.createInstance();
 				interestedMessage.setMessgageType(Constants.MESSAGE_INTERESTED);
 				
 				if(message.returnMsgType() == Constants.MESSAGE_BITFIELD)
@@ -103,7 +103,7 @@ public class requestPiece implements Runnable
 					
 					if(missingPieceIndex == -1)
 					{
-						MsgDetails notInterestedMessage = MsgDetails.createInstance();
+						messageDefine notInterestedMessage = messageDefine.createInstance();
 						notInterestedMessage.setMessgageType(Constants.MESSAGE_NOT_INTERESTED);
 						peerHandler.sendNotInterestedMessage(notInterestedMessage);
 					}
@@ -135,7 +135,7 @@ public class requestPiece implements Runnable
 
 					if(missingPieceIndex == -1)
 					{
-						MsgDetails notInterestedMessage = MsgDetails.createInstance();
+						messageDefine notInterestedMessage = messageDefine.createInstance();
 						notInterestedMessage.setMessgageType(Constants.MESSAGE_NOT_INTERESTED);
 						peerHandler.sendNotInterestedMessage(notInterestedMessage);
 					}

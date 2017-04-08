@@ -5,21 +5,25 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import chokehandler.chokeUnchoke;
 import chokehandler.unchoking;
 import logging.*;
-import messages.*;
+import messaging.*;
 import property.*;
+import peer2peer.*;
+import beanClasses.*;
+
 
 public class Starter {
 
 	public static String LOGGER_PREFIX = Starter.class.getSimpleName();
 
 	public ArrayList<String> peerList = new ArrayList<String>();
-	public MessageIdentifier messageIdentifier = null;
+	public messageID messageIdentifier = null;
 	public ChunkHandler msgHandler = null;
 	
 	public static Starter starter = null;
@@ -63,7 +67,7 @@ public class Starter {
 				return null;
 			}
 
-			starter.messageIdentifier = MessageIdentifier.createIdentfier();
+			starter.messageIdentifier = messageID.createIdentfier();
 			
 			if (starter.messageIdentifier == null)
 			{
@@ -72,7 +76,7 @@ public class Starter {
 				return null;
 			}
 
-			if (PeerProperties.createInstance().getPeerInfoMap().get(peerID).checkIfTheFileExits() == false)
+			if (PeerProperties.createInstance().getPeerInfoMap().get(peerID).fileExist() == false)
 			{
 				starter.msgHandler = ChunkHandler.createChunkHanlder(false, peerID);
 			} 
@@ -88,7 +92,7 @@ public class Starter {
 				return null;
 			}
 
-			starter.neighborThreads = new ArrayList<PeerHandle>();
+			starter.neighborThreads = new ArrayList<Peer>();
 
 			starter.logs = logger.getLogger(peerID);
 			if (starter.logs == null)
@@ -99,7 +103,7 @@ public class Starter {
 				return null;
 			}
 
-			starter.peerServer = Server.createInstance(peerID, starter);
+			starter.peerServer = Server.initialize(peerID, starter);
 
 			starter.logs = logger.getLogger(peerID);
 
@@ -122,18 +126,18 @@ public class Starter {
 
 		chokeUnchokeHandler = chokeUnchoke.createInstance(this);
 		
-		int chokeUnchokeInterval = Integer.parseInt(ConfigTokens.returnPropertyValue(Constants.CHOKE_UNCHOKE_INTERVAL));
+		int chokeUnchokeInterval = Integer.parseInt(PeerPropertyTokens.returnPropertyValue(Constants.CHOKE_UNCHOKE_INTERVAL));
 		chokeUnchokeHandler.start(0, chokeUnchokeInterval);
 
 		unchokingHandler= unchoking.createInstance(this);
-		int unchokeInterval = Integer.parseInt(ConfigTokens.returnPropertyValue(Constants.OPTIMISTIC_UNCHOKE_INTERVAL));
+		int unchokeInterval = Integer.parseInt(PeerPropertyTokens.returnPropertyValue(Constants.OPTIMISTIC_UNCHOKE_INTERVAL));
 	
-		unchokingHandler.task = unchokingHandler.task_scheduler.scheduleAtFixedRate(optimisticUnchokeManager, 10, optimisticUnchokeInterval, TimeUnit.SECONDS);
+		unchokingHandler.task = unchokingHandler.task_scheduler.scheduleAtFixedRate(unchokingHandler, 10, unchokeInterval, TimeUnit.SECONDS);
 	}
 
 	private void connectPeers() 
 	{
-		HashMap<String, PeerDetails> neighborPeers = propertyHandler.getPeerInfoMap();
+		Map<String, PeerDetail> neighborPeers = propertyHandler.getPeerInfoMap();
 		
 		Set<String> peerIDList = neighborPeers.keySet();
 
@@ -141,19 +145,19 @@ public class Starter {
 		{		
 			if (Integer.parseInt(neighborPeerID) < Integer.parseInt(peerID)) 
 			{
-				logger.info("Peer " + peerID + " makes a connection  to Peer [" + neighborPeerID + "]");
+				logs.info("Peer " + peerID + " makes a connection  to Peer [" + neighborPeerID + "]");
 				
-				PeerDetails details= neighborPeers.get(neighborPeerID);
-				String neighborPeerHost = details.getHostAddress();
-				int neighborPortNumber = details.getPortNumber();
+				PeerDetail details= neighborPeers.get(neighborPeerID);
+				String neighborPeerHost = details.getPeerAddress();
+				int neighborPortNumber = details.getPeerPort();
 
 				try 
 				{
 					Socket neighborPeerSocket = new Socket(neighborPeerHost, neighborPortNumber);
 
-					PeerHandle neighborPeerHandler = PeerHandle.createPeerConnection(neighborPeerSocket, this);
+					Peer neighborPeerHandler = Peer.createPeerConnection(neighborPeerSocket, this);
 
-					neighborPeerHandler.setPeerID(details.returnPeerId());
+					neighborPeerHandler.setPeerID(details.getPeerID());
 
 					neighborThreads.add(neighborPeerHandler);
 
@@ -200,10 +204,10 @@ public class Starter {
 	}
 
 
-	public synchronized MsgDetails getBitFieldMessage()
+	public synchronized messageDefine getBitFieldMessage()
 	{
 
-		MsgDetails message = MsgDetails.createInstance();
+		messageDefine message = messageDefine.createInstance();
 
 		message.setHandler(msgHandler.returnBitFieldHandler());
 	
@@ -220,7 +224,7 @@ public class Starter {
 	{
 		HashMap<String, Double> peerSpeeds = new HashMap<String, Double>();
 
-		for (PeerHandle peerHandler : neighborThreads)
+		for (Peer peerHandler : neighborThreads)
 		{
 			peerSpeeds.put(peerHandler.peerID, peerHandler.getDownloadSpeed());
 		}
@@ -230,16 +234,16 @@ public class Starter {
 	public void chokeThePeers(ArrayList<String> peerList)
 	{
 		chokedPeers = peerList;
-		MsgDetails chokeMessage = MsgDetails.createInstance();
+		messageDefine chokeMessage = messageDefine.createInstance();
 		chokeMessage.setMessgageType(Constants.MESSAGE_CHOKE);
 
 		for (String peerToBeChoked : peerList) 
 		{
-			for (PeerHandle peerHandler : neighborThreads)
+			for (Peer peerHandler : neighborThreads)
 			{
 				if (peerHandler.peerID.equals(peerToBeChoked)) 
 				{
-					if (peerHandler.isHandshakeACKReceived == true) 
+					if (peerHandler.handshakeACKReceived == true) 
 					{	
 						peerHandler.sendChokeMessage(chokeMessage);
 					}
@@ -252,16 +256,16 @@ public class Starter {
 	
 	public void unchokePeers(ArrayList<String> peerList)
 	{
-		MsgDetails unChokeMessage = MsgDetails.createInstance();
+		messageDefine unChokeMessage = messageDefine.createInstance();
 		unChokeMessage.setMessgageType(Constants.MESSAGE_UNCHOKE);
 		
 		for (String peerToUnchoke : peerList) 
 		{
-			for (PeerHandle peerHandler : neighborThreads) 
+			for (Peer peerHandler : neighborThreads) 
 			{
 				if (peerHandler.peerID.equals(peerToUnchoke))
 				{
-					if (peerHandler.isHandshakeACKReceived == true) 
+					if (peerHandler.handshakeACKReceived == true) 
 					{
 						peerHandler.sendUnchokeMessage(unChokeMessage);
 					}
@@ -274,16 +278,16 @@ public class Starter {
 	
 	public void unchokePeer(String peerToUnchoke) 
 	{
-		MsgDetails unChokeMessage = MsgDetails.createInstance();
-		unChokeMessage.setMessgageType(Constants.UNCHOKE_MESSAGE);
+		messageDefine unChokeMessage = messageDefine.createInstance();
+		unChokeMessage.setMessgageType(Constants.MESSAGE_UNCHOKE);
 
-		logger.info("Peer [" + peerID + "] has unchoked neighbor [" + peerToUnchoke + "]");
+		logs.info("Peer [" + peerID + "] has unchoked neighbor [" + peerToUnchoke + "]");
 		
-		for (PeerHandle peerHandler : neighborThreads) 
+		for (Peer peerHandler : neighborThreads) 
 		{
 			if (peerHandler.peerID.equals(peerToUnchoke))
 			{
-				if (peerHandler.isHandshakeACKReceived == true) 
+				if (peerHandler.handshakeACKReceived == true) 
 				{
 					peerHandler.sendUnchokeMessage(unChokeMessage);
 				}
@@ -293,20 +297,21 @@ public class Starter {
 	}
 
 
-	public synchronized void saveDownloadedPiece(MsgDetails pieceMessage, String sourcePeerID)
+	public synchronized void saveDownloadedPiece(messageDefine pieceMessage, String sourcePeerID)
 	{		
 		msgHandler.writePieceToPeer(pieceMessage.getPieceIndex(), pieceMessage.getData());
 		logger.info("Peer [" + starter.getPeerID() + "] has downloaded the piece [" + pieceMessage.getPieceIndex() + "] from [" + sourcePeerID + "]. Now the number of pieces it has is " + (msgHandler.returnBitFieldHandler().getSetbitCount()));
 	}
 
+	
 	public int[] missingPieceIndex() 
 	{
 		return msgHandler.getMissingPieceNumberArray();
 	}
 
-	public MsgDetails getPieceMessage(int pieceIndex)
+	public messageDefine getPieceMessage(int pieceIndex)
 	{
-		Chunk piece = msgHandler.getdata(pieceIndex);
+		pieceDetails piece = msgHandler.getdata(pieceIndex);
 		
 		if (piece == null) 
 		{
@@ -314,7 +319,7 @@ public class Starter {
 		}
 		else 
 		{
-			MsgDetails message = MsgDetails.createInstance();
+			messageDefine message = messageDefine.createInstance();
 			message.setMessgageType(Constants.MESSAGE_PIECE);
 			message.setPieceIndex(pieceIndex);
 			message.setData(piece);
@@ -325,11 +330,11 @@ public class Starter {
 
 	public void sendHavePeiceMessage(int pieceIndex, String fromPeerID)
 	{
-		MsgDetails haveMessage = MsgDetails.createInstance();
+		messageDefine haveMessage = messageDefine.createInstance();
 		haveMessage.setPieceIndex(pieceIndex);
 		haveMessage.setMessgageType(Constants.MESSAGE_HAVE);
 
-		for (PeerHandle peerHandler : neighborThreads) {
+		for (Peer peerHandler : neighborThreads) {
 			
 			if (fromPeerID.equals(peerHandler.peerID) == false) {
 				peerHandler.sendHaveMessage(haveMessage);
@@ -338,19 +343,20 @@ public class Starter {
 	}
 
 	
-	public void broadcastShutdown() {
-		if (AllPeersConnected == false || peerServer.isPeerServerCompleted == false) {
+	public void broadcastShutdown() 
+	{
+		if (AllPeersConnected == false || peerServer.isServComplete == false) {
 
 			return;
 		}
 
-		MsgDetails shutdownMessage = MsgDetails.createInstance();
+		messageDefine shutdownMessage = messageDefine.createInstance();
 
 		shutdownMessage.setMessgageType(Constants.MESSAGE_SHUTDOWN);
 		
 		peerList.add(peerID);
 	
-		for (PeerHandle peerHandler : neighborThreads) 
+		for (Peer peerHandler : neighborThreads) 
 		{	
 			peerHandler.sendShutdownMessage(shutdownMessage);
 		}
@@ -358,7 +364,7 @@ public class Starter {
 
 	
 	public int numberOfPeersToBeConnected() {
-		HashMap<String, PeerDetails> neighborPeerMap = propertyHandler.getPeerInfoMap();
+		Map<String, PeerDetail> neighborPeerMap = propertyHandler.getPeerInfoMap();
 		Set<String> peerIDList = neighborPeerMap.keySet();
 
 		int numberOfPeersToEstablishConnection = 0;
