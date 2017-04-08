@@ -48,13 +48,13 @@ public class Server implements Runnable{
 			
 			serverSocket = new ServerSocket(peerServerPortNumber);
 			
-			int numberOfPeersSupposedToBeConnected = starter.getNumberOfPeersSupposedToBeConnected();
+			int numberOfPeersSupposedToBeConnected = starter.numberOfPeersToBeConnected();
 			
 			for(int i=0 ; i<numberOfPeersSupposedToBeConnected ; i++){
 				
 				Socket neighborPeerSocket = serverSocket.accept();
 				
-				PeerHandle neighborPeerHandler = PeerHandle.createPeerConnection(neighborPeerSocket, starter);
+				Peer neighborPeerHandler = Peer.createPeerConnection(neighborPeerSocket, starter);
 				
 				starter.neighborThreads.add(neighborPeerHandler);
 				//(neighborPeerHandler);
@@ -79,9 +79,4 @@ public class Server implements Runnable{
 		}	
 		return true;
 	}
-	
-
-
-
-
 }

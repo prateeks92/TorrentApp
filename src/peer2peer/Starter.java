@@ -24,7 +24,7 @@ public class Starter {
 	
 	public static Starter starter = null;
 
-	public ArrayList<PeerHandle> neighborThreads = null;
+	public ArrayList<Peer> neighborThreads = null;
 	public chokeUnchoke chokeUnchokeHandler = null;
 
 	public unchoking unchokingHandler = null;
@@ -175,7 +175,7 @@ public class Starter {
 	public boolean checkAllPeersFileDownloadComplete() 
 	{
 		System.out.println("check all peers file download"+ peerID);
-		if (AllPeersConnected == false || peerServer.isPeerServerCompleted == false)
+		if (AllPeersConnected == false || peerServer.isServComplete == false)
 		{
 			return false;
 		}

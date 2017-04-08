@@ -1,46 +1,52 @@
 package beanClasses;
 
-public class PeerDetail {
-	
+public class PeerDetail 
+{	
 	private String peerID;
 	
 	private int peerPort;
 	
-	private boolean isFileExist;
+	private boolean fileExists;
 	
 	private String peerAddress;
 
-	public String getPeerID() {
+	public String getPeerID() 
+	{
 		return peerID;
 	}
 
-	public void setPeerID(String peerID) {
+	public void setPeerID(String peerID)
+	{
 		this.peerID = peerID;
 	}
 
-	public int getPeerPort() {
+	public int getPeerPort() 
+	{
 		return peerPort;
 	}
 
-	public void setPeerPort(int peerPort) {
+	public void setPeerPort(int peerPort) 
+	{
 		this.peerPort = peerPort;
 	}
 
-	public boolean isFileExist() {
-		return isFileExist;
+	public boolean fileExist() 
+	{
+		return fileExists;
 	}
 
-	public void setFileExist(boolean isFileExist) {
-		this.isFileExist = isFileExist;
+	public void setFileAvailability(boolean isFile)
+	{
+		this.fileExists = isFile;
 	}
 
-	public String getPeerAddress() {
+	public String getPeerAddress() 
+	{
 		return peerAddress;
 	}
 
-	public void setPeerAddress(String peerAddress) {
+	public void setPeerAddress(String peerAddress)
+	{
 		this.peerAddress = peerAddress;
 	}
-
-	
 }

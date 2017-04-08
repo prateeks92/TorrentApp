@@ -11,7 +11,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import logging.*;
-import property.PeerProperties;
+import property.*;
 import peer2peer.*;
 
 
@@ -51,10 +51,10 @@ public class chokeUnchoke implements Runnable
 	{
 
 		Integer preferredNeighbors = 0;
-		HashMap<String, Double> speedMap = threadController.returnDownloadSpeedForPeers();
+		HashMap<String, Double> speedMap = threadController.PeerDownloadSpeeds();
 		
-		if (ConfigTokens.returnPropertyValue("NumberOfPreferredNeighbors") != null)
-			preferredNeighbors = Integer.parseInt(ConfigTokens.returnPropertyValue("NumberOfPreferredNeighbors"));
+		if (PeerPropertyTokens.returnPropertyValue("NumberOfPreferredNeighbors") != null)
+			preferredNeighbors = Integer.parseInt(PeerPropertyTokens.returnPropertyValue("NumberOfPreferredNeighbors"));
 		else
 			{	
 			}
@@ -129,7 +129,7 @@ public class chokeUnchoke implements Runnable
 			
 			logger.info(log);
 			
-			threadController.unchokeThePeers(unchoked);
+			threadController.unchokePeers(unchoked);
 			threadController.chokeThePeers(choked);
 		}
 	}

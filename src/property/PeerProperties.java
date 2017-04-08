@@ -42,9 +42,9 @@ private static PeerProperties  PeerConfiguration = null;
 				peerInfoInstance.setPeerPort(Integer.parseInt(tokens[2]));
 				
 				if(tokens[3].equals("1")){
-					peerInfoInstance.setFileExist(true);
+					peerInfoInstance.setFileAvailability(true);
 				}else{
-					peerInfoInstance.setFileExist(false);
+					peerInfoInstance.setFileAvailability(false);
 				}
 				
 				peerDetailMap.put(tokens[0],peerInfoInstance);
