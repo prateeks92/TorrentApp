@@ -1,11 +1,5 @@
 package peer2peer;
 
-
-import MsgDetails;
-import PeerDetails;
-import PeerHandle;
-import Server;
-
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -14,31 +8,17 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import logger.SimpleLogger;
-import Messages.Chunk;
-import Messages.ChunkHandler;
-import Messages.MessageIdentifier;
-import PropertyReader.ConfigTokens;
-import PropertyReader.Configurations;
-import PropertyReader.Constants;
-
-/**
- * The Class starter.
- * 
- */
 public class Starter {
 
+	public static Starter starter = null;
+	public String peerID;
+	
 	public static String LOGGER_PREFIX = Starter.class.getSimpleName();
-
 	public ArrayList<String> peerList = new ArrayList<String>();
 	public MessageIdentifier messageIdentifier = null;
 	public ChunkHandler msgHandler = null;
-	
-	public static Starter starter = null;
-
 	public ArrayList<PeerHandle> neighborThreads = null;
 	public Server peerServer;
-
 	public SimpleLogger logger = null;
 	
 
@@ -47,15 +27,11 @@ public class Starter {
 
 	public boolean AllPeerConnected = false;
 
-	public String getPeerID() {
-		return peerID;
-	}
-
 	/** The peer id. */
-	public String peerID;
+
 	
 
-	public static synchronized Starter setUpPeer(String peerID) {
+	public static synchronized Starter peerConnect(String peerID) {
 		if (starter == null) {
 			starter = new Starter();
 			starter.peerID = peerID;
@@ -122,7 +98,7 @@ public class Starter {
 		}
 
 	private void connectOtherPeers() {
-		HashMap<String, PeerDetails> neighborPeerMap = propertyReader.getPeerInfoMap();
+		HashMap<String, PeerDetail> neighborPeerMap = propertyReader.getPeerInfoMap();
 		Set<String> peerIDList = neighborPeerMap.keySet();
 
 		for (String neighborPeerID : peerIDList) {
@@ -130,7 +106,7 @@ public class Starter {
 			if (Integer.parseInt(neighborPeerID) < Integer.parseInt(peerID)) {
 				logger.info("Peer " + peerID + " makes a connection  to Peer [" + neighborPeerID + "]");
 				
-				PeerDetails details= neighborPeerMap.get(neighborPeerID);
+				PeerDetail details= neighborPeerMap.get(neighborPeerID);
 				String neighborPeerHost = details.getHostAddress();
 				int neighborPortNumber = details.getPortNumber();
 
@@ -271,7 +247,7 @@ public class Starter {
 	}
 
 	public int getNumberOfPeersSupposedToBeConnected() {
-		HashMap<String, PeerDetails> neighborPeerMap = propertyReader.getPeerInfoMap();
+		HashMap<String, PeerDetail> neighborPeerMap = propertyReader.getPeerInfoMap();
 		Set<String> peerIDList = neighborPeerMap.keySet();
 
 		int numberOfPeersSupposedToBeEstablishingConnection = 0;
