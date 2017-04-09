@@ -4,11 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.RandomAccessFile;
 
-import messaging.Bitfield_Processor;
-import messaging.Piece;
-import messaging.Piece_Processor;
-import property.PeerPropertyTokens;
-import property.Constants;
+import messaging.*;
+import property.*;
+import property.*;
+import beanClasses.*;
 
 public class Piece_Processor {
 	
@@ -19,7 +18,7 @@ public class Piece_Processor {
 	int piecesCount ;
 	RandomAccessFile outputStream;
 	FileInputStream inputStream;
-	private static Bitfield_Processor bitField ;
+	private static bitField bitField ;
 
 	private Piece_Processor(){
 		
@@ -49,10 +48,10 @@ public class Piece_Processor {
 
 		try
 		{
-			bitField = new Bitfield_Processor(piecesCount);
+			bitField = new bitField(piecesCount);
 			
 			if(isFileExists){
-				bitField.setAllBits();
+				bitField.setBits();
 			}
 			
 			String outputFileName = new String();			
@@ -89,7 +88,6 @@ public class Piece_Processor {
 	}
 	
 	synchronized public void close(){
-		//close outputfilestream
 		try {
 			if(outputStream!= null){
 				outputStream.close();
@@ -108,9 +106,9 @@ public class Piece_Processor {
 				
 	}
 	
-	synchronized public Piece getdata(int num){
+	synchronized public pieceDetails getdata(int num){
 		
-		Piece readPiece = new Piece(pieceSize);
+		pieceDetails readPiece = new pieceDetails(pieceSize);
 		if(bitField.getBitFieldOn(num))
 		{
 			//have to read this piece from my own output file.
@@ -124,9 +122,9 @@ public class Piece_Processor {
 					for(int i=0 ; i<data_Size ; i++){
 						newBytesRead[i] = bytesRead[i];
 					}
-					readPiece.set_Data(bytesRead);
+					readPiece.setData(bytesRead);
 				}else{
-					readPiece.set_Data(bytesRead);
+					readPiece.setData(bytesRead);
 				}
 				
 				return readPiece;
@@ -143,14 +141,14 @@ public class Piece_Processor {
 		}
 	}
 	
-	synchronized public boolean PeerPieceWriter(int num,Piece piece){
+	synchronized public boolean PeerPieceWriter(int num,pieceDetails piece){
 		
 		if(!bitField.getBitFieldOn(num))
 		{
 			try {
 				
 				outputStream.seek(num*pieceSize);
-				outputStream.write(piece.get_Data());
+				outputStream.write(piece.getData());
 				
 				bitField.setBitFieldOn(num, true);
 				
@@ -216,10 +214,10 @@ public class Piece_Processor {
 	}
 	
 	synchronized public boolean fileDownloadCompletionCheck(){
-		return bitField.FileDownloadCompleteCheck();
+		return bitField.checkIfFileDownloadComplete();
 	}
 	
-	public Bitfield_Processor returnBitFieldProcessor(){
+	public bitField returnBitFieldProcessor(){
 		return bitField;
 	}
 

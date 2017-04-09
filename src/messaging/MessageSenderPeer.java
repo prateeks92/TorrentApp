@@ -4,10 +4,10 @@ import java.io.ObjectOutputStream;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import beanClasses.message;
-import messaging.messageDefine;
-import peer2peer.Peer;
-import property.Constants;
+import beanClasses.*;
+import messaging.*;
+import peer2peer.*;
+import property.*;
 
 public class MessageSenderPeer implements Runnable {
 	

@@ -13,8 +13,7 @@ import peer2peer.*;
 public class unchoking implements Runnable{
 	
 	public ScheduledFuture<?> task = null;
-	
-	
+		
     public ScheduledExecutorService task_scheduler = null;
 	
     private static unchoking Handler = null;

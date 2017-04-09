@@ -75,10 +75,10 @@ public class logger extends Logger
 	{
 		if (log == null) 
 		{
-			String directory = "" + Constants.LOG_FILE_DIRECTORY_NAME;
+			String directory = "" + Constants.LOG_DIR;
 			File file = new File(directory);
 			file.mkdir();
-			log = new logger(peerID, directory + "/" + Constants.LOG_FILE_NAME_PREFIX + peerID + ".log", Constants.LOGGER_NAME);
+			log = new logger(peerID, directory + "/" + Constants.LOG_NAME_START + peerID + ".log", Constants.LOGGER_NAME);
 			try
 			{
 				log.init();

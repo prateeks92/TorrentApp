@@ -300,7 +300,7 @@ public class Starter {
 	public synchronized void saveDownloadedPiece(messageDefine pieceMessage, String sourcePeerID)
 	{		
 		msgHandler.writePieceToPeer(pieceMessage.getPieceIndex(), pieceMessage.getData());
-		logger.info("Peer [" + starter.getPeerID() + "] has downloaded the piece [" + pieceMessage.getPieceIndex() + "] from [" + sourcePeerID + "]. Now the number of pieces it has is " + (msgHandler.returnBitFieldHandler().getSetbitCount()));
+		logs.info("Peer [" + starter.getPeerID() + "] has downloaded the piece [" + pieceMessage.getPieceIndex() + "] from [" + sourcePeerID + "]. Now the number of pieces it has is " + (msgHandler.returnBitFieldHandler().getSetbitCount()));
 	}
 
 	

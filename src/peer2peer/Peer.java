@@ -36,7 +36,7 @@ public class Peer implements Runnable
 
 	public Starter threadController;
 	
-	public PeerMessageSender peerMessageSender;
+	public MessageSenderPeer peerMessageSender;
 	
 	public requestPiece pieceRequester;
 	
@@ -96,7 +96,7 @@ public class Peer implements Runnable
 			return null;
 		}
 		
-		peerHandler.peerMessageSender = PeerMessageSender.createInstance(peerHandler.OutputDataStream,peerHandler);
+		peerHandler.peerMessageSender = MessageSenderPeer.instanceCreate(peerHandler.OutputDataStream,peerHandler);
 		
 		if(peerHandler.peerMessageSender == null)
 		{
@@ -334,7 +334,7 @@ public class Peer implements Runnable
 				try
 				{
 					Thread.sleep(2000);
-					peerMessageSender.sendMessage(pieceMessage);
+					peerMessageSender.messageSend(pieceMessage);
 				}
 				catch (InterruptedException e) 
 				{
@@ -378,7 +378,7 @@ public class Peer implements Runnable
 		{
 			handshake message = handshake.createInstance();
 			message.setPeerID(threadController.getPeerID());
-			peerMessageSender.sendMessage(message);
+			peerMessageSender.messageSend(message);
 			handShakeMessageSent = true;
 			return true;
 		}
@@ -395,7 +395,7 @@ public class Peer implements Runnable
 		try 
 		{			
 			messageDefine message = threadController.getBitFieldMessage();
-			peerMessageSender.sendMessage(message);
+			peerMessageSender.messageSend(message);
 			Thread.sleep(2000);
 			return true;
 		}
@@ -413,7 +413,7 @@ public class Peer implements Runnable
 		{
 			if(peerChoked == false)
 			{
-				peerMessageSender.sendMessage(interestedMessage);
+				peerMessageSender.messageSend(interestedMessage);
 			}
 		}
 		catch (InterruptedException e) 
@@ -440,7 +440,7 @@ public class Peer implements Runnable
 	{
 		try 
 		{
-			peerMessageSender.sendMessage(notInterestedMessage);
+			peerMessageSender.messageSend(notInterestedMessage);
 
 		}
 		catch (InterruptedException e)
@@ -456,7 +456,7 @@ public class Peer implements Runnable
 		{
 			if(peerChoked == false)
 			{
-				peerMessageSender.sendMessage(requestMessage);
+				peerMessageSender.messageSend(requestMessage);
 			}			
 		} 
 		catch (InterruptedException e) 
@@ -476,7 +476,7 @@ public class Peer implements Runnable
 				dataSize = 0;
 
 				setChoke(true);
-				peerMessageSender.sendMessage(chokeMessage);
+				peerMessageSender.messageSend(chokeMessage);
 			}
 		}
 		catch (InterruptedException e)
@@ -496,7 +496,7 @@ public class Peer implements Runnable
 				dataSize = 0;
 
 				setChoke(false);
-				peerMessageSender.sendMessage(unchokeMessage);
+				peerMessageSender.messageSend(unchokeMessage);
 			}
 			
 		} 
@@ -511,7 +511,7 @@ public class Peer implements Runnable
 	{
 		try 
 		{
-			peerMessageSender.sendMessage(haveMessage);
+			peerMessageSender.messageSend(haveMessage);
 		}
 		catch (InterruptedException e) 
 		{
@@ -524,11 +524,10 @@ public class Peer implements Runnable
 	{
 		try 
 		{
-			peerMessageSender.sendMessage(shutdownMessage);
+			peerMessageSender.messageSend(shutdownMessage);
 		}
 		catch (Exception e) 
 		{
-			// TODO: handle exception
 			e.printStackTrace();
 		}
 	}
