@@ -24,7 +24,7 @@ public class Starter {
 
 	public ArrayList<String> peerList = new ArrayList<String>();
 	public messageID messageIdentifier = null;
-	public ChunkHandler msgHandler = null;
+	public Piece_Processor msgHandler = null;
 	
 	public static Starter starter = null;
 
@@ -49,7 +49,7 @@ public class Starter {
 
 	public String peerID;
 
-	ArrayList<String> chokedPeers = new ArrayList<String>();
+	public ArrayList<String> chokedPeers = new ArrayList<String>();
 	
 	public static synchronized Starter setUpPeer(String peerID) 
 	{
@@ -78,11 +78,11 @@ public class Starter {
 
 			if (PeerProperties.createInstance().getPeerInfoMap().get(peerID).fileExist() == false)
 			{
-				starter.msgHandler = ChunkHandler.createChunkHanlder(false, peerID);
+				starter.msgHandler = Piece_Processor.createPieceHanlder(false, peerID);
 			} 
 			else 
 			{
-				starter.msgHandler = ChunkHandler.createChunkHanlder(true, peerID);
+				starter.msgHandler = Piece_Processor.createPieceHanlder(true, peerID);
 			}
 
 			if (starter.msgHandler == null) 
@@ -209,7 +209,7 @@ public class Starter {
 
 		messageDefine message = messageDefine.createInstance();
 
-		message.setHandler(msgHandler.returnBitFieldHandler());
+		message.setHandler(msgHandler.returnBitFieldProcessor());
 	
 		if (message.returnBitFieldHandler() == null)
 		{
@@ -299,14 +299,14 @@ public class Starter {
 
 	public synchronized void saveDownloadedPiece(messageDefine pieceMessage, String sourcePeerID)
 	{		
-		msgHandler.writePieceToPeer(pieceMessage.getPieceIndex(), pieceMessage.getData());
-		logger.info("Peer [" + starter.getPeerID() + "] has downloaded the piece [" + pieceMessage.getPieceIndex() + "] from [" + sourcePeerID + "]. Now the number of pieces it has is " + (msgHandler.returnBitFieldHandler().getSetbitCount()));
+		msgHandler.PeerPieceWriter(pieceMessage.getPieceIndex(), pieceMessage.getData());
+		logger.info("Peer [" + starter.getPeerID() + "] has downloaded the piece [" + pieceMessage.getPieceIndex() + "] from [" + sourcePeerID + "]. Now the number of pieces it has is " + (msgHandler.returnBitFieldProcessor().getSetbitCount()));
 	}
 
 	
 	public int[] missingPieceIndex() 
 	{
-		return msgHandler.getMissingPieceNumberArray();
+		return msgHandler.arrayMissingPieceNumberGetter();
 	}
 
 	public messageDefine getPieceMessage(int pieceIndex)
