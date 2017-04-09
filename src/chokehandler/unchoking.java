@@ -5,7 +5,6 @@ import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 import logging.*;
 import peer2peer.*;
@@ -66,7 +65,7 @@ public class unchoking implements Runnable{
 		
 		threadController.checkAllPeersFileDownloadComplete();
 		
-		if(threadController.msgHandler.checkIfFileDownloadComplete() == true)
+		if(threadController.msgHandler.fileDownloadCompletionCheck() == true)
 		{
 			logger.info("Download completed for Peer ["+threadController.getPeerID()+"].");
 			threadController.broadcastShutdown();
