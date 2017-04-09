@@ -4,10 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.RandomAccessFile;
 
-import messaging.*;
-import property.*;
-import property.*;
-import beanClasses.*;
+import beanClasses.pieceDetails;
+import messaging.Piece_Processor;
+import property.PeerPropertyTokens;
+import property.Constants;
 
 public class Piece_Processor {
 	
@@ -18,8 +18,7 @@ public class Piece_Processor {
 	int piecesCount ;
 	RandomAccessFile outputStream;
 	FileInputStream inputStream;
-	private static bitField bitField ;
-
+	private static beanClasses.bitField bitField ;
 	private Piece_Processor(){
 		
 	}
@@ -48,7 +47,7 @@ public class Piece_Processor {
 
 		try
 		{
-			bitField = new bitField(piecesCount);
+			bitField = new beanClasses.bitField(piecesCount);
 			
 			if(isFileExists){
 				bitField.setBits();
@@ -88,6 +87,7 @@ public class Piece_Processor {
 	}
 	
 	synchronized public void close(){
+		//close outputfilestream
 		try {
 			if(outputStream!= null){
 				outputStream.close();
@@ -217,7 +217,7 @@ public class Piece_Processor {
 		return bitField.checkIfFileDownloadComplete();
 	}
 	
-	public bitField returnBitFieldProcessor(){
+	public beanClasses.bitField returnBitFieldProcessor(){
 		return bitField;
 	}
 
