@@ -149,8 +149,8 @@ public class messageID
 	}
 	
 	
-	public MsgDetails parsePeer2PeerMessage(byte[] rawData)
-	{
+	public messageDefine parsePeer2PeerMessage(byte[] rawData)
+	{ 
 		return null;
 	}
 	
@@ -164,50 +164,48 @@ public class messageID
 		
 		byte messageType = rawData[4];
 		
+		messageDefine message = messageDefine.createInstance();
+
 		
 		switch (messageType) 
 		{
 			case Constants.MESSAGE_CHOKE:
-				MsgDetails message = MsgDetails.createInstance();
+				message = messageDefine.createInstance();
 				message.setMessgageType(Constants.MESSAGE_CHOKE);
 				message.setMessageLength(1);
 				message.setData(null);
 				return message;
-				break;
 				
 			case Constants.MESSAGE_UNCHOKE:
-				MsgDetails message = MsgDetails.createInstance();
+				message = messageDefine.createInstance();
 				message.setMessgageType(Constants.MESSAGE_UNCHOKE);
 				message.setMessageLength(1);
 				message.setData(null);
 				return message;
-				break;
 				
 			case Constants.MESSAGE_INTERESTED:
-				MsgDetails message = MsgDetails.createInstance();
+				message = messageDefine.createInstance();
 				message.setMessgageType(Constants.MESSAGE_INTERESTED);
 				message.setMessageLength(1);
 				message.setData(null);
 				return message;	
-				break;
 				
 			case Constants.MESSAGE_NOT_INTERESTED:
-				MsgDetails message = MsgDetails.createInstance();
+				message = messageDefine.createInstance();
 				message.setMessgageType(Constants.MESSAGE_NOT_INTERESTED);
 				message.setMessageLength(1);
 				message.setData(null);
 				return message;			
-				break;
 				
 			case Constants.MESSAGE_HAVE:
-				MsgDetails message = MsgDetails.createInstance();
+				message = messageDefine.createInstance();
 				message.setMessageLength(5);
 				message.setMessageLength(Constants.MESSAGE_HAVE);
 				message.setPieceIndex((int)rawData[8]);
 				break;
 				
 			case Constants.MESSAGE_REQUEST:
-				MsgDetails message = MsgDetails.createInstance();
+				message = messageDefine.createInstance();
 				message.setMessageLength(5);
 				message.setMessageLength(Constants.MESSAGE_REQUEST);
 				message.setPieceIndex((int)rawData[8]);
