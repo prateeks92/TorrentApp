@@ -69,6 +69,7 @@ public class chokeUnchoke implements Runnable
 			
 			Set<Entry<String, Double>> entrySet = speedMap.entrySet();
 
+			@SuppressWarnings("unchecked")
 			Entry<String, Double>[] tempArr = new Entry[speedMap.size()];
 			
 			LinkedHashMap<String, Double> ssmap = new LinkedHashMap<String, Double>();
