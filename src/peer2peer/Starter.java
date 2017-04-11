@@ -97,7 +97,7 @@ public class Starter {
 			starter.logs = logger.getLogger(peerID);
 			if (starter.logs == null)
 			{
-				System.out.println("Unable to Initialize logger object");	
+				System.out.println("logger initialization error");	
 				isInitialized = false;
 				starter=null;
 				return null;
@@ -136,18 +136,16 @@ public class Starter {
 	}
 
 	private void connectPeers() 
-	{
-		Map<String, PeerDetail> neighborPeers = propertyHandler.getPeerInfoMap();
-		
-		Set<String> peerIDList = neighborPeers.keySet();
+	{		
+		Set<String> peerIDList = propertyHandler.getPeerInfoMap().keySet();
 
 		for (String neighborPeerID : peerIDList) 
 		{		
 			if (Integer.parseInt(neighborPeerID) < Integer.parseInt(peerID)) 
 			{
-				logs.info("Peer " + peerID + " makes a connection  to Peer [" + neighborPeerID + "]");
+				logs.info("Peer with peerID " + peerID + " is making a connection to PeerID [" + neighborPeerID + "]");
 				
-				PeerDetail details= neighborPeers.get(neighborPeerID);
+				PeerDetail details= propertyHandler.getPeerInfoMap().get(neighborPeerID);
 				String neighborPeerHost = details.getPeerAddress();
 				int neighborPortNumber = details.getPeerPort();
 
@@ -178,7 +176,7 @@ public class Starter {
 
 	public boolean checkAllPeersFileDownloadComplete() 
 	{
-		System.out.println("check all peers file download"+ peerID);
+		System.out.println("Now Checking All Peers for Download with PeerID "+ peerID);
 		if (AllPeersConnected == false || peerServer.isServComplete == false)
 		{
 			return false;
@@ -229,6 +227,51 @@ public class Starter {
 			peerSpeeds.put(peerHandler.peerID, peerHandler.getDownloadSpeed());
 		}
 		return peerSpeeds;
+	}
+	
+public int numberOfPeersToBeConnected() {
+		
+		Set<String> peerIDs= propertyHandler.getPeerInfoMap().keySet();
+
+		int countPeer = 0;
+
+		for (String neighborPeerID : peerIDs) 
+		{	
+			if (Integer.valueOf(neighborPeerID) > Integer.valueOf(peerID)) 
+			{
+				countPeer++;
+			}
+		}
+
+		return countPeer;
+	}
+
+	public synchronized logger getLogger() 
+	{
+		return logs;
+	}
+	
+	public int[] missingPieceIndex() 
+	{
+		return msgHandler.arrayMissingPieceNumberGetter();
+	}
+
+	public messageDefine getPieceMessage(int pieceIndex)
+	{
+		pieceDetails piece = msgHandler.getdata(pieceIndex);
+		
+		if (piece == null) 
+		{
+			return null;
+		}
+		else 
+		{
+			messageDefine message = messageDefine.createInstance();
+			message.setMessgageType(Constants.MESSAGE_PIECE);
+			message.setPieceIndex(pieceIndex);
+			message.setData(piece);
+			return message;
+		}
 	}
 
 	public void chokeThePeers(ArrayList<String> peerList)
@@ -303,30 +346,6 @@ public class Starter {
 		logs.info("Peer [" + starter.getPeerID() + "] has downloaded the piece [" + pieceMessage.getPieceIndex() + "] from [" + sourcePeerID + "]. Now the number of pieces it has is " + (msgHandler.returnBitFieldProcessor().getSetbitCount()));
 	}
 
-	
-	public int[] missingPieceIndex() 
-	{
-		return msgHandler.arrayMissingPieceNumberGetter();
-	}
-
-	public messageDefine getPieceMessage(int pieceIndex)
-	{
-		pieceDetails piece = msgHandler.getdata(pieceIndex);
-		
-		if (piece == null) 
-		{
-			return null;
-		}
-		else 
-		{
-			messageDefine message = messageDefine.createInstance();
-			message.setMessgageType(Constants.MESSAGE_PIECE);
-			message.setPieceIndex(pieceIndex);
-			message.setData(piece);
-			return message;
-		}
-	}
-
 
 	public void sendHavePeiceMessage(int pieceIndex, String fromPeerID)
 	{
@@ -336,14 +355,14 @@ public class Starter {
 
 		for (Peer peerHandler : neighborThreads) {
 			
-			if (fromPeerID.equals(peerHandler.peerID) == false) {
+			if (fromPeerID.equals(peerHandler.peerID) != true) {
 				peerHandler.sendHaveMessage(haveMessage);
 			}
 		}
 	}
 
 	
-	public void broadcastShutdown() 
+	public void sendShutdownSignal() 
 	{
 		if (AllPeersConnected == false || peerServer.isServComplete == false) {
 
@@ -353,35 +372,11 @@ public class Starter {
 		messageDefine shutdownMessage = messageDefine.createInstance();
 
 		shutdownMessage.setMessgageType(Constants.MESSAGE_SHUTDOWN);
-		
-		peerList.add(peerID);
 	
 		for (Peer peerHandler : neighborThreads) 
 		{	
 			peerHandler.sendShutdownMessage(shutdownMessage);
 		}
-	}
-
-	
-	public int numberOfPeersToBeConnected() {
-		Map<String, PeerDetail> neighborPeerMap = propertyHandler.getPeerInfoMap();
-		Set<String> peerIDList = neighborPeerMap.keySet();
-
-		int numberOfPeersToEstablishConnection = 0;
-
-		for (String neighborPeerID : peerIDList) 
-		{	
-			if (Integer.parseInt(neighborPeerID) > Integer.parseInt(peerID)) 
-			{
-				numberOfPeersToEstablishConnection++;
-			}
-		}
-
-		return numberOfPeersToEstablishConnection;
-	}
-
-	public synchronized logger getLogger() 
-	{
-		return logs;
+		peerList.add(peerID);
 	}
 }

@@ -68,7 +68,7 @@ public class unchoking implements Runnable{
 		if(threadController.msgHandler.fileDownloadCompletionCheck() == true)
 		{
 			logger.info("Download completed for Peer ["+threadController.getPeerID()+"].");
-			threadController.broadcastShutdown();
+			threadController.sendShutdownSignal();
 		};
 	}
 }
