@@ -1,9 +1,11 @@
 package peer2peer;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 
 import logging.*;
@@ -152,7 +154,7 @@ public class Peer implements Runnable
 				
 				int returnType = message.returnMsgType();
 				
-				messageDefine peer2PeerMessage = (messageDefine)message;
+				messageDefine peer2PeerMessage;
 				
 				switch (returnType) 
 				{
@@ -222,6 +224,12 @@ public class Peer implements Runnable
 						break;
 				}
 			}
+		}
+		catch(SocketException e){
+			System.out.println("Connection Reset.!!");
+		}
+		catch (EOFException e) {
+			System.out.println("Peer "+peerID+" Disconnected.!!");
 		}
 		catch (IOException e)
 		{
