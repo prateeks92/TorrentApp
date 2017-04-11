@@ -1,4 +1,4 @@
-package messaging;
+package beanClasses;
 
 import beanClasses.*;
 
@@ -6,13 +6,13 @@ public class messageDefine implements message
 {
 	
 	private static final long serialVersionUID = 1L;
-	private int messageLength;
-	private int messgageType;
+	private int msgLen;
+	private int msgType;
 	private int pieceIndex;
 	private pieceDetails data;
-	private bitField handler = null;
-	public int messageNumber = 0;
-	private static int messageCounter = 0;
+	private bitField bitFieldhandler = null;
+	public int msgNum = 0;
+	private static int msgCount = 0;
 	
 	private messageDefine()
 	{
@@ -36,8 +36,8 @@ public class messageDefine implements message
 	
 	private boolean init()
 	{
-		messageCounter++;
-		messageNumber = messageCounter;
+		msgCount++;
+		msgNum = msgCount;
 		return true;
 	}
 	
@@ -46,41 +46,34 @@ public class messageDefine implements message
 	{
 		return null;
 	}
-
 	
-	public int returnMsgType() 
-	{
-		return this.messgageType;
-	}
-
 	
 	public int getLength() 
 	{
-		return this.messageLength;
+		return this.msgLen;
+	}
+	
+	public void setMsgLen(int messageLength) 
+	{
+		this.msgLen = messageLength;
 	}
 	
 	
-	public int getMessgageType() 
+	public int returnMsgType() 
 	{
-		return messgageType;
+		return this.msgType;
+	}	
+	
+	
+	public int getMsgType() 
+	{
+		return msgType;
 	}
 
 	
-	public void setMessgageType(int messgageType) 
+	public void setMsgType(int messgageType) 
 	{
-		this.messgageType = messgageType;
-	}
-
-	
-	public int getPieceIndex() 
-	{
-		return pieceIndex;
-	}
-
-	
-	public void setPieceIndex(int pieceIndex) 
-	{
-		this.pieceIndex = pieceIndex;
+		this.msgType = messgageType;
 	}
 
 	
@@ -94,28 +87,34 @@ public class messageDefine implements message
 	{
 		this.data = data;
 	}
-
 	
-	public void setMessageLength(int messageLength) 
+	
+	public int getPieceIndex() 
 	{
-		this.messageLength = messageLength;
+		return pieceIndex;
 	}
 
+	
+	public void setPieceIndex(int pieceIndex) 
+	{
+		this.pieceIndex = pieceIndex;
+	}
+	
 	
 	public bitField returnBitFieldHandler() 
 	{
-		return handler;
+		return bitFieldhandler;
 	}
 
 	
-	public void setHandler(bitField handler) 
+	public void setBitFieldhandler(bitField handler) 
 	{
-		this.handler = handler;
+		this.bitFieldhandler = handler;
 	}
 
 	
 	public int getMessageIndex() 
 	{
-		return messageNumber;
+		return msgNum;
 	}	
 }

@@ -21,7 +21,7 @@ public class Server implements Runnable{
 	public String ID;
 	public Starter starter;
 	
-	public static Server initialize(String id, Starter controller){
+	public static Server init(String id, Starter controller){
 		if(serverObj == null){
 			
 			serverObj = new Server();
@@ -53,7 +53,7 @@ public class Server implements Runnable{
 				
 				Socket neighborPeerSocket = serverSocket.accept();
 				
-				Peer neighborPeerHandler = Peer.createPeerConnection(neighborPeerSocket, starter);
+				Peer neighborPeerHandler = Peer.newConnection(neighborPeerSocket, starter);
 				
 				starter.neighborThreads.add(neighborPeerHandler);
 				//(neighborPeerHandler);

@@ -5,7 +5,6 @@ import java.io.Serializable;
 public class bitField implements Serializable
 {
 	private boolean ArrBitField[];
-	
 	private int size;
 	
 	public bitField(int numPieces)

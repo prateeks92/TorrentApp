@@ -9,27 +9,11 @@ import beanClasses.*;
 public class messageID 
 {
 
-	private static messageID manager;
+	private static messageID messageIdentifier;
 	
 	private messageID(){
 		
 	}
-	
-	public static messageID createIdentfier()
-	{
-		if(manager == null)
-		{
-			manager = new messageID();
-			boolean isInitialized = true;
-			
-			if(isInitialized == false)
-			{
-				manager.close();
-				manager = null;
-			}
-		}
-		return manager;
-	} 
 	
 	
 	public void close()
@@ -37,132 +21,147 @@ public class messageID
 		
 	}
 	
-	public byte[] geHandshakeMessage(byte[] rawData)
+	
+	public static messageID createIdentfier()
 	{
-		String headerString = Constants.HANDSHAKE_HEADER_STRING ;
-
-		char array[] = headerString.toCharArray();
+		if(messageIdentifier == null)
+		{
+			messageIdentifier = new messageID();
+			boolean isInitialized = true;
+			
+			if(isInitialized == false)
+			{
+				messageIdentifier.close();
+				messageIdentifier = null;
+			}
+		}
+		return messageIdentifier;
+	} 
+	
+	public byte[] geHandshakeMsg(byte[] rawData)
+	{
+		char headerArray[] = Constants.HANDSHAKE_HEADER_STRING.toCharArray();
 		
-		byte[] headerMessage = new byte[32];
+		byte[] header = new byte[32];
 
 		for(int i = 0; i< 18; i++)
 		{
-			headerMessage[i] = (byte)array[i];	
+			header[i] = (byte)headerArray[i];	
 		}
 		
 		for(int i = 18; i<31;i++)
 		{
-			headerMessage[i] = (byte)0;
+			header[i] = (byte)0;
 			
 		}
 		
-		headerMessage[31] = rawData[3];
+		header[31] = rawData[3];
 		
-		return headerMessage;
+		return header;
 	}
 	
-	public byte[] getRequestMessage(int pieceIndex)
+	public byte[] getRequestMsg(int pieceIndex)
 	{
 		return null;
 	}
 
 	
-	public byte[] getChokeMessage()
+	public byte[] getChokeMsg()
 	{		
-		ByteBuffer byteBuffer = ByteBuffer.allocate(5);
-		byteBuffer.putInt(Constants.EMPTY_MESSAGE_SIZE);
-		byteBuffer.put(Constants.MESSAGE_CHOKE);
-		byte[] chokeMessage = byteBuffer.array();
+		ByteBuffer byteBuff = ByteBuffer.allocate(5);
+		byteBuff.putInt(Constants.EMPTY_MESSAGE_SIZE);
+		byteBuff.put(Constants.MESSAGE_CHOKE);
+		byte[] chokeMessage = byteBuff.array();
 		return chokeMessage;
 		
 	}
 	
 	
-	public byte[] getUnchokeMessage()
+	public byte[] getUnchokeMsg()
 	{
-		ByteBuffer byteBuffer = ByteBuffer.allocate(5);
-		byteBuffer.putInt(Constants.EMPTY_MESSAGE_SIZE);
-		byteBuffer.put(Constants.MESSAGE_UNCHOKE);
-		byte[] unChokeMessage = byteBuffer.array();
+		ByteBuffer byteBuff = ByteBuffer.allocate(5);
+		byteBuff.putInt(Constants.EMPTY_MESSAGE_SIZE);
+		byteBuff.put(Constants.MESSAGE_UNCHOKE);
+		byte[] unChokeMessage = byteBuff.array();
 		return unChokeMessage;		
 	}
 	
 
-	public byte[] getInterestedMessage()
+	public byte[] getInterestMsg()
 	{
-		ByteBuffer byteBuffer = ByteBuffer.allocate(5);
-		byteBuffer.putInt(Constants.EMPTY_MESSAGE_SIZE);
-		byteBuffer.put(Constants.MESSAGE_INTERESTED);
-		byte[] interested = byteBuffer.array();
+		ByteBuffer byteBuff = ByteBuffer.allocate(5);
+		byteBuff.putInt(Constants.EMPTY_MESSAGE_SIZE);
+		byteBuff.put(Constants.MESSAGE_INTERESTED);
+		byte[] interested = byteBuff.array();
 		return interested;
 	}
 	
-	public byte[] getNotInterestedMessage()
+	public byte[] getNoInterestMsg()
 	{
-		ByteBuffer byteBuffer = ByteBuffer.allocate(5);
-		byteBuffer.putInt(Constants.EMPTY_MESSAGE_SIZE);
-		byteBuffer.put(Constants.MESSAGE_NOT_INTERESTED);
-		byte[] notInterested = byteBuffer.array();
+		ByteBuffer byteBuff = ByteBuffer.allocate(5);
+		byteBuff.putInt(Constants.EMPTY_MESSAGE_SIZE);
+		byteBuff.put(Constants.MESSAGE_NOT_INTERESTED);
+		byte[] notInterested = byteBuff.array();
 		return notInterested;
 
 	}
 
 	
-	public byte[] getHaveMessage(byte[] payLoad)
+	public byte[] getHaveMsg(byte[] payLoad)
 	{
-		ByteBuffer byteBuffer = ByteBuffer.allocate(9);
-		byteBuffer.putInt(5);
-		byteBuffer.put(Constants.MESSAGE_HAVE);
-		byteBuffer.put(payLoad);
-		byte[] have = byteBuffer.array();
+		ByteBuffer byteBuff = ByteBuffer.allocate(9);
+		byteBuff.putInt(5);
+		byteBuff.put(Constants.MESSAGE_HAVE);
+		byteBuff.put(payLoad);
+		byte[] have = byteBuff.array();
 		return have;
 		
 	}	
 	
 	
-	public byte[] getBitFieldMessage(byte[] payload)
+	public byte[] getBitFieldMsg(byte[] payload)
 	{
-		int payloadSize = payload.length;
-		ByteBuffer byteBuffer = ByteBuffer.allocate(payloadSize+5);
-		byteBuffer.putInt(payloadSize+1);
-		byteBuffer.put(Constants.MESSAGE_BITFIELD);
-		byteBuffer.put(payload);
-		byte[] bitFieldMessage = byteBuffer.array();
+		int payloadLen = payload.length;
+		ByteBuffer byteBuff = ByteBuffer.allocate(payloadLen+5);
+		byteBuff.putInt(payloadLen+1);
+		byteBuff.put(Constants.MESSAGE_BITFIELD);
+		byteBuff.put(payload);
+		byte[] bitFieldMessage = byteBuff.array();
 		return bitFieldMessage;
 	}
 
 	
-	public byte[] getRequestMessage(byte[] payLoad)
+	public byte[] getRequestMsg(byte[] payLoad)
 	{
-		ByteBuffer byteBuffer = ByteBuffer.allocate(9);
-		byteBuffer.putInt(5);
-		byteBuffer.put(Constants.MESSAGE_REQUEST);
-		byteBuffer.put(payLoad);
-		byte[] requestMessage = byteBuffer.array();
+		ByteBuffer byteBuff = ByteBuffer.allocate(9);
+		byteBuff.putInt(5);
+		byteBuff.put(Constants.MESSAGE_REQUEST);
+		byteBuff.put(payLoad);
+		byte[] requestMessage = byteBuff.array();
 		return requestMessage;
 	}
 	
 	
-	public handshake parseHandShakeMessage(byte[] rawData)
+	public handshake checkHandShakeMsg(byte[] data)
 	{
 		return null;
 	}
 	
 	
-	public messageDefine parsePeer2PeerMessage(byte[] rawData)
+	public messageDefine checkPeer2PeerMsg(byte[] data)
 	{ 
 		return null;
 	}
 	
 	
-	public message parseMessage(byte[] rawData)
+	public message checkMessage(byte[] data)
 	{
-		if( rawData== null || rawData.length < 5)
+		if( data== null || data.length < 5)
 		{
 			return null;
 		}
 		
-		byte messageType = rawData[4];
+		byte messageType = data[4];
 		
 		messageDefine message = messageDefine.createInstance();
 
@@ -171,44 +170,44 @@ public class messageID
 		{
 			case Constants.MESSAGE_CHOKE:
 				message = messageDefine.createInstance();
-				message.setMessgageType(Constants.MESSAGE_CHOKE);
-				message.setMessageLength(1);
+				message.setMsgType(Constants.MESSAGE_CHOKE);
+				message.setMsgLen(1);
 				message.setData(null);
 				return message;
 				
 			case Constants.MESSAGE_UNCHOKE:
 				message = messageDefine.createInstance();
-				message.setMessgageType(Constants.MESSAGE_UNCHOKE);
-				message.setMessageLength(1);
+				message.setMsgType(Constants.MESSAGE_UNCHOKE);
+				message.setMsgLen(1);
 				message.setData(null);
 				return message;
 				
 			case Constants.MESSAGE_INTERESTED:
 				message = messageDefine.createInstance();
-				message.setMessgageType(Constants.MESSAGE_INTERESTED);
-				message.setMessageLength(1);
+				message.setMsgType(Constants.MESSAGE_INTERESTED);
+				message.setMsgLen(1);
 				message.setData(null);
 				return message;	
 				
 			case Constants.MESSAGE_NOT_INTERESTED:
 				message = messageDefine.createInstance();
-				message.setMessgageType(Constants.MESSAGE_NOT_INTERESTED);
-				message.setMessageLength(1);
+				message.setMsgType(Constants.MESSAGE_NOT_INTERESTED);
+				message.setMsgLen(1);
 				message.setData(null);
 				return message;			
 				
 			case Constants.MESSAGE_HAVE:
 				message = messageDefine.createInstance();
-				message.setMessageLength(5);
-				message.setMessageLength(Constants.MESSAGE_HAVE);
-				message.setPieceIndex((int)rawData[8]);
+				message.setMsgLen(5);
+				message.setMsgLen(Constants.MESSAGE_HAVE);
+				message.setPieceIndex((int)data[8]);
 				break;
 				
 			case Constants.MESSAGE_REQUEST:
 				message = messageDefine.createInstance();
-				message.setMessageLength(5);
-				message.setMessageLength(Constants.MESSAGE_REQUEST);
-				message.setPieceIndex((int)rawData[8]);
+				message.setMsgLen(5);
+				message.setMsgLen(Constants.MESSAGE_REQUEST);
+				message.setPieceIndex((int)data[8]);
 				break;
 		}
 		return null;

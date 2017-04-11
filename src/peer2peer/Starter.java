@@ -78,11 +78,11 @@ public class Starter {
 
 			if (PeerProperties.createInstance().getPeerInfoMap().get(peerID).fileExist() == false)
 			{
-				starter.msgHandler = Piece_Processor.createPieceHanlder(false, peerID);
+				starter.msgHandler = Piece_Processor.createPieceHandler(false, peerID);
 			} 
 			else 
 			{
-				starter.msgHandler = Piece_Processor.createPieceHanlder(true, peerID);
+				starter.msgHandler = Piece_Processor.createPieceHandler(true, peerID);
 			}
 
 			if (starter.msgHandler == null) 
@@ -103,7 +103,7 @@ public class Starter {
 				return null;
 			}
 
-			starter.peerServer = Server.initialize(peerID, starter);
+			starter.peerServer = Server.init(peerID, starter);
 
 			starter.logs = logger.getLogger(peerID);
 
@@ -120,8 +120,8 @@ public class Starter {
 
 	public void startThread() 
 	{
-		new Thread(peerServer).start();
-	
+			new Thread(peerServer).start();
+		
 		connectPeers();
 
 		chokeUnchokeHandler = chokeUnchoke.createInstance(this);
@@ -153,7 +153,7 @@ public class Starter {
 				{
 					Socket neighborPeerSocket = new Socket(neighborPeerHost, neighborPortNumber);
 
-					Peer neighborPeerHandler = Peer.createPeerConnection(neighborPeerSocket, this);
+					Peer neighborPeerHandler = Peer.newConnection(neighborPeerSocket, this);
 
 					neighborPeerHandler.setPeerID(details.getPeerID());
 
@@ -174,9 +174,9 @@ public class Starter {
 		this.AllPeersConnected = true;
 	}
 
-	public boolean checkAllPeersFileDownloadComplete() 
+	public boolean checkIfDownloaded() 
 	{
-		System.out.println("Now Checking All Peers for Download with PeerID "+ peerID);
+		System.out.println("Checking Peer  " + peerID + "  for download completion");
 		if (AllPeersConnected == false || peerServer.isServComplete == false)
 		{
 			return false;
@@ -207,13 +207,13 @@ public class Starter {
 
 		messageDefine message = messageDefine.createInstance();
 
-		message.setHandler(msgHandler.returnBitFieldProcessor());
+		message.setBitFieldhandler(msgHandler.returnBitFieldProcessor());
 	
 		if (message.returnBitFieldHandler() == null)
 		{
 			
 		}
-		message.setMessgageType(Constants.MESSAGE_BITFIELD);
+		message.setMsgType(Constants.MESSAGE_BITFIELD);
 
 		return message;
 	}
@@ -224,7 +224,7 @@ public class Starter {
 
 		for (Peer peerHandler : neighborThreads)
 		{
-			peerSpeeds.put(peerHandler.peerID, peerHandler.getDownloadSpeed());
+			peerSpeeds.put(peerHandler.peerID, peerHandler.getDownSpeed());
 		}
 		return peerSpeeds;
 	}
@@ -253,7 +253,7 @@ public int numberOfPeersToBeConnected() {
 	
 	public int[] missingPieceIndex() 
 	{
-		return msgHandler.arrayMissingPieceNumberGetter();
+		return msgHandler.getterMissingPieceNumbers();
 	}
 
 	public messageDefine getPieceMessage(int pieceIndex)
@@ -267,7 +267,7 @@ public int numberOfPeersToBeConnected() {
 		else 
 		{
 			messageDefine message = messageDefine.createInstance();
-			message.setMessgageType(Constants.MESSAGE_PIECE);
+			message.setMsgType(Constants.MESSAGE_PIECE);
 			message.setPieceIndex(pieceIndex);
 			message.setData(piece);
 			return message;
@@ -278,7 +278,7 @@ public int numberOfPeersToBeConnected() {
 	{
 		chokedPeers = peerList;
 		messageDefine chokeMessage = messageDefine.createInstance();
-		chokeMessage.setMessgageType(Constants.MESSAGE_CHOKE);
+		chokeMessage.setMsgType(Constants.MESSAGE_CHOKE);
 
 		for (String peerToBeChoked : peerList) 
 		{
@@ -288,7 +288,7 @@ public int numberOfPeersToBeConnected() {
 				{
 					if (peerHandler.handshakeACKReceived == true) 
 					{	
-						peerHandler.sendChokeMessage(chokeMessage);
+						peerHandler.sendChokeMsg(chokeMessage);
 					}
 					break;
 				}
@@ -300,7 +300,7 @@ public int numberOfPeersToBeConnected() {
 	public void unchokePeers(ArrayList<String> peerList)
 	{
 		messageDefine unChokeMessage = messageDefine.createInstance();
-		unChokeMessage.setMessgageType(Constants.MESSAGE_UNCHOKE);
+		unChokeMessage.setMsgType(Constants.MESSAGE_UNCHOKE);
 		
 		for (String peerToUnchoke : peerList) 
 		{
@@ -310,7 +310,7 @@ public int numberOfPeersToBeConnected() {
 				{
 					if (peerHandler.handshakeACKReceived == true) 
 					{
-						peerHandler.sendUnchokeMessage(unChokeMessage);
+						peerHandler.sendUnchokeMsg(unChokeMessage);
 					}
 					break;
 				}
@@ -322,7 +322,7 @@ public int numberOfPeersToBeConnected() {
 	public void unchokePeer(String peerToUnchoke) 
 	{
 		messageDefine unChokeMessage = messageDefine.createInstance();
-		unChokeMessage.setMessgageType(Constants.MESSAGE_UNCHOKE);
+		unChokeMessage.setMsgType(Constants.MESSAGE_UNCHOKE);
 
 		logs.info("Peer [" + peerID + "] has unchoked neighbor [" + peerToUnchoke + "]");
 		
@@ -332,7 +332,7 @@ public int numberOfPeersToBeConnected() {
 			{
 				if (peerHandler.handshakeACKReceived == true) 
 				{
-					peerHandler.sendUnchokeMessage(unChokeMessage);
+					peerHandler.sendUnchokeMsg(unChokeMessage);
 				}
 				break;
 			}
@@ -343,7 +343,7 @@ public int numberOfPeersToBeConnected() {
 	public synchronized void saveDownloadedPiece(messageDefine pieceMessage, String sourcePeerID)
 	{		
 		msgHandler.PeerPieceWriter(pieceMessage.getPieceIndex(), pieceMessage.getData());
-		logs.info("Peer [" + starter.getPeerID() + "] has downloaded the piece [" + pieceMessage.getPieceIndex() + "] from [" + sourcePeerID + "]. Now the number of pieces it has is " + (msgHandler.returnBitFieldProcessor().getSetbitCount()));
+		logs.info("Peer [" + starter.getPeerID() + "] has downloaded the piece [" + pieceMessage.getPieceIndex() + "] from [" + sourcePeerID + "]. Total number of pieces it has is " + (msgHandler.returnBitFieldProcessor().getSetbitCount()));
 	}
 
 
@@ -351,12 +351,12 @@ public int numberOfPeersToBeConnected() {
 	{
 		messageDefine haveMessage = messageDefine.createInstance();
 		haveMessage.setPieceIndex(pieceIndex);
-		haveMessage.setMessgageType(Constants.MESSAGE_HAVE);
+		haveMessage.setMsgType(Constants.MESSAGE_HAVE);
 
 		for (Peer peerHandler : neighborThreads) {
 			
 			if (fromPeerID.equals(peerHandler.peerID) != true) {
-				peerHandler.sendHaveMessage(haveMessage);
+				peerHandler.sendHaveMsg(haveMessage);
 			}
 		}
 	}
@@ -371,11 +371,11 @@ public int numberOfPeersToBeConnected() {
 
 		messageDefine shutdownMessage = messageDefine.createInstance();
 
-		shutdownMessage.setMessgageType(Constants.MESSAGE_SHUTDOWN);
+		shutdownMessage.setMsgType(Constants.MESSAGE_SHUTDOWN);
 	
 		for (Peer peerHandler : neighborThreads) 
 		{	
-			peerHandler.sendShutdownMessage(shutdownMessage);
+			peerHandler.sendShutDownMsg(shutdownMessage);
 		}
 		peerList.add(peerID);
 	}

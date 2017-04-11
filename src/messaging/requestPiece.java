@@ -12,18 +12,14 @@ import peer2peer.*;
 
 public class requestPiece implements Runnable 
 {	
-	private static String LOGGER_PREFIX = requestPiece.class.getSimpleName();
-	
-	public BlockingQueue<messageDefine> messageQueue;
-	
-	private boolean isShutDown = false;
-	
+	private static String LOGGER_PREFIX = requestPiece.class.getSimpleName();	
+	public BlockingQueue<messageDefine> msgQ;
+	private boolean shutDown = false;
 	private Starter threadController;
 	private Peer peerHandler;
+	private bitField bitFieldHandler = null;
+	int [] pieces = new int[1000];	
 	
-	private bitField neighborPeerBitFieldhandler = null;
-	
-	int [] pieceIndexArray = new int[1000];	
 	
 	private requestPiece()
 	{
@@ -39,12 +35,12 @@ public class requestPiece implements Runnable
 		
 		requestPiece requestSender = new requestPiece();
 		
-		requestSender.messageQueue = new ArrayBlockingQueue<messageDefine>(Constants.SENDER_SIZE_QUEUE);
+		requestSender.msgQ = new ArrayBlockingQueue<messageDefine>(Constants.SENDER_SIZE_QUEUE);
 
 		int pieceSize = Integer.parseInt(PeerPropertyTokens.returnPropertyValue("PieceSize"));
 		int nPieces = (int) Math.ceil(Integer.parseInt(PeerPropertyTokens.returnPropertyValue("FileSize")) / (pieceSize*1.0));
 	
-		requestSender.neighborPeerBitFieldhandler = new bitField(nPieces);
+		requestSender.bitFieldHandler = new bitField(nPieces);
 		
 		requestSender.threadController = controller;
 		requestSender.peerHandler = peerHandler;
@@ -53,16 +49,16 @@ public class requestPiece implements Runnable
 	}
 	
 	
-	public int getRandomPieceNo()
+	public int arbitPieceNum()
 	{
-		bitField thisPeerBitFieldhandler = threadController.getBitFieldMessage().returnBitFieldHandler();
+		bitField peerBitFieldHandler = threadController.getBitFieldMessage().returnBitFieldHandler();
 		int count = 0;
 
-		for(int i=0 ; i<neighborPeerBitFieldhandler.getSize() && count<pieceIndexArray.length ; i++)
+		for(int i=0 ; i<bitFieldHandler.getSize() && count<pieces.length ; i++)
 		{
-			if(thisPeerBitFieldhandler.getBitFieldOn(i) == false && neighborPeerBitFieldhandler.getBitFieldOn(i) == true)
+			if(peerBitFieldHandler.getBitFieldOn(i) == false && bitFieldHandler.getBitFieldOn(i) == true)
 			{
-				pieceIndexArray[count] = i;
+				pieces[count] = i;
 				count++;
 			}
 		}
@@ -70,8 +66,7 @@ public class requestPiece implements Runnable
 		if(count != 0)
 		{
 			Random random = new Random();
-			int index = random.nextInt(count);
-			return pieceIndexArray[index];
+			return pieces[random.nextInt(count)];
 		}
 		else
 		{
@@ -82,116 +77,108 @@ public class requestPiece implements Runnable
 	
 	public void run() 
 	{	
-		while(isShutDown == false)
+		while(shutDown == false)
 		{
 			try 
 			{				
-				messageDefine message = messageQueue.take();
-				System.out.println(LOGGER_PREFIX+": Received Message: "+Constants.getMessageName(message.returnMsgType()));
+				messageDefine message = msgQ.take();
+				System.out.println(LOGGER_PREFIX+": Message Received : "+Constants.getMessageName(message.returnMsgType()));
 				
-				messageDefine requestMessage = messageDefine.createInstance();
-				requestMessage.setMessgageType(Constants.MESSAGE_REQUEST);
+				messageDefine requestMsg = messageDefine.createInstance();
+				requestMsg.setMsgType(Constants.MESSAGE_REQUEST);
 				
-				messageDefine interestedMessage = messageDefine.createInstance();
-				interestedMessage.setMessgageType(Constants.MESSAGE_INTERESTED);
+				messageDefine interestMsg = messageDefine.createInstance();
+				interestMsg.setMsgType(Constants.MESSAGE_INTERESTED);
 				
 				if(message.returnMsgType() == Constants.MESSAGE_BITFIELD)
 				{
-					neighborPeerBitFieldhandler = message.returnBitFieldHandler();
+					bitFieldHandler = message.returnBitFieldHandler();
 					
-					int missingPieceIndex = getRandomPieceNo();
+					int missingPieces = arbitPieceNum();
 					
-					if(missingPieceIndex == -1)
+					if(missingPieces == -1)
 					{
-						messageDefine notInterestedMessage = messageDefine.createInstance();
-						notInterestedMessage.setMessgageType(Constants.MESSAGE_NOT_INTERESTED);
-						peerHandler.sendNotInterestedMessage(notInterestedMessage);
+						messageDefine noInterestMsg = messageDefine.createInstance();
+						noInterestMsg.setMsgType(Constants.MESSAGE_NOT_INTERESTED);
+						peerHandler.sendNoInterestMsg(noInterestMsg);
 					}
 					else
 					{
-						interestedMessage.setPieceIndex(missingPieceIndex);
-						peerHandler.sendInterestedMessage(interestedMessage);
+						interestMsg.setPieceIndex(missingPieces);
+						peerHandler.sendInterestMsg(interestMsg);
 						
-						requestMessage.setPieceIndex(missingPieceIndex);
-						peerHandler.sendRequestMessage(requestMessage);
+						requestMsg.setPieceIndex(missingPieces);
+						peerHandler.sendRequestMsg(requestMsg);
 					}									
 				}
 				
 				if(message.returnMsgType() == Constants.MESSAGE_HAVE)
 				{
-					int pieceIndex = message.getPieceIndex();
+					int pieceNum = message.getPieceIndex();
 					
 					try 
 					{
-						neighborPeerBitFieldhandler.setBitFieldOn(pieceIndex, true);
+						bitFieldHandler.setBitFieldOn(pieceNum, true);
 					}
 					catch (Exception e)
 					{
-						System.out.println(LOGGER_PREFIX+"["+peerHandler.peerID+"]: NULL POINTER EXCEPTION for piece Index"+pieceIndex +" ... "+neighborPeerBitFieldhandler);
+						System.out.println(LOGGER_PREFIX+"["+peerHandler.peerID+"]: Error : NULL POINTER for piece Index"+pieceNum +" ... "+bitFieldHandler);
 						e.printStackTrace();
 					}
 					
-					int missingPieceIndex = getRandomPieceNo();
+					int missingPieceIndex = arbitPieceNum();
 
 					if(missingPieceIndex == -1)
 					{
-						messageDefine notInterestedMessage = messageDefine.createInstance();
-						notInterestedMessage.setMessgageType(Constants.MESSAGE_NOT_INTERESTED);
-						peerHandler.sendNotInterestedMessage(notInterestedMessage);
+						messageDefine noInterestMsg = messageDefine.createInstance();
+						noInterestMsg.setMsgType(Constants.MESSAGE_NOT_INTERESTED);
+						peerHandler.sendNoInterestMsg(noInterestMsg);
 					}
 					else
 					{
-						if(peerHandler.isPieceMessageForPreviousMessageReceived() == true)
+						if(peerHandler.lastPieceMessageReceived() == true)
 						{
-							peerHandler.setPieceMessageForPreviousMessageReceived(false);
-							interestedMessage.setPieceIndex(missingPieceIndex);
-							peerHandler.sendInterestedMessage(interestedMessage);
+							peerHandler.setLastPieceMessageReceived(false);
+							interestMsg.setPieceIndex(missingPieceIndex);
+							peerHandler.sendInterestMsg(interestMsg);
 							
-							requestMessage.setPieceIndex(missingPieceIndex);
-							peerHandler.sendRequestMessage(requestMessage);
+							requestMsg.setPieceIndex(missingPieceIndex);
+							peerHandler.sendRequestMsg(requestMsg);
 						}	
 					}									
 				}
 				
 				if(message.returnMsgType() == Constants.MESSAGE_PIECE)
 				{					
-					int missingPieceIndex = getRandomPieceNo();
+					int numMissingPiece = arbitPieceNum();
 
-					if(missingPieceIndex == -1)
+					if(numMissingPiece != -1)
 					{
-						// do nothing 
-					}
-					else
-					{
-						if(peerHandler.isPieceMessageForPreviousMessageReceived() == true)
+						if(peerHandler.lastPieceMessageReceived() == true)
 						{
-							peerHandler.setPieceMessageForPreviousMessageReceived(false);
-							interestedMessage.setPieceIndex(missingPieceIndex);
-							peerHandler.sendInterestedMessage(interestedMessage);
+							peerHandler.setLastPieceMessageReceived(false);
+							interestMsg.setPieceIndex(numMissingPiece);
+							peerHandler.sendInterestMsg(interestMsg);
 							
-							requestMessage.setPieceIndex(missingPieceIndex);
-							peerHandler.sendRequestMessage(requestMessage);
+							requestMsg.setPieceIndex(numMissingPiece);
+							peerHandler.sendRequestMsg(requestMsg);
 						}						
 					}									
 				}
 				
 				if(message.returnMsgType() == Constants.MESSAGE_UNCHOKE)
 				{
-					int missingPieceIndex = getRandomPieceNo();
+					int numMissingPiece = arbitPieceNum();
 
-					peerHandler.setPieceMessageForPreviousMessageReceived(false);
+					peerHandler.setLastPieceMessageReceived(false);
 					
-					if(missingPieceIndex == -1)
+					if(numMissingPiece != -1)
 					{
-						// do nothing 
-					}
-					else
-					{
-						interestedMessage.setPieceIndex(missingPieceIndex);
-						peerHandler.sendInterestedMessage(interestedMessage);
+						interestMsg.setPieceIndex(numMissingPiece);
+						peerHandler.sendInterestMsg(interestMsg);
 						
-						requestMessage.setPieceIndex(missingPieceIndex);
-						peerHandler.sendRequestMessage(requestMessage);
+						requestMsg.setPieceIndex(numMissingPiece);
+						peerHandler.sendRequestMsg(requestMsg);
 					}									
 				}
 				
@@ -206,9 +193,9 @@ public class requestPiece implements Runnable
 	}
 	
 	
-	public boolean checkIfNeighbourDownloadFile()
+	public boolean checkNeighbourDownloadComplete()
 	{
-		if(neighborPeerBitFieldhandler != null && neighborPeerBitFieldhandler.checkIfFileDownloadComplete() == true)
+		if(bitFieldHandler != null && bitFieldHandler.checkIfFileDownloadComplete() == true)
 		{
 			return true;
 		}

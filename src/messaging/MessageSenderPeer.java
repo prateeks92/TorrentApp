@@ -11,13 +11,11 @@ import property.*;
 
 public class MessageSenderPeer implements Runnable {
 	
-	private static final String LOGGER_PREFIX = MessageSenderPeer.class.getSimpleName();
-	
+	private static final String LOGGER_PREFIX = MessageSenderPeer.class.getSimpleName();	
 	private BlockingQueue<message> queue_Messages;
-	
 	private ObjectOutputStream outStream = null;
+	private boolean shutDown = false;
 	
-	private boolean isShutDown = false;
 	
 	private MessageSenderPeer(){
 		
@@ -26,7 +24,7 @@ public class MessageSenderPeer implements Runnable {
 	public static MessageSenderPeer instanceCreate(ObjectOutputStream outputStream, Peer handler){
 		
 		MessageSenderPeer msgSender = new MessageSenderPeer();
-		boolean isInitialized = msgSender.intialize();		
+		boolean isInitialized = msgSender.init();		
 		if(isInitialized == false){
 			msgSender.deinitialize();
 			msgSender = null;
@@ -44,7 +42,7 @@ public class MessageSenderPeer implements Runnable {
 		queue_Messages = null;
 	}
 	
-	private boolean intialize(){
+	private boolean init(){
 		queue_Messages = new ArrayBlockingQueue<message>(Constants.SENDER_SIZE_QUEUE);
 		return true;
 	}
@@ -65,7 +63,7 @@ public class MessageSenderPeer implements Runnable {
 			throw new IllegalStateException(LOGGER_PREFIX+": This object is not initialized properly. This might be result of calling deinit() method");
 		}
 		
-		while(isShutDown == false){
+		while(shutDown == false){
 			try {				
 				message msg = queue_Messages.take();
 				
@@ -92,6 +90,6 @@ public class MessageSenderPeer implements Runnable {
 	}
 	
 	public void shutdown(){
-		isShutDown = true;
+		shutDown = true;
 	}
 }

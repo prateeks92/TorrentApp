@@ -12,42 +12,31 @@ import property.Constants;
 public class Piece_Processor {
 	
 	public static final String LOGGER_PREFIX = Piece_Processor.class.getSimpleName();
-
 	private static Piece_Processor pieceProcessor;	
 	int pieceSize;
-	int piecesCount ;
+	int numPieces ;
 	RandomAccessFile outputStream;
 	FileInputStream inputStream;
 	private static beanClasses.bitField bitField ;
+	
+	
 	private Piece_Processor(){
 		
 	}
 		
 	
-	synchronized public static Piece_Processor createPieceHanlder(boolean doesFileExist, String peer_ID){
-		if(pieceProcessor == null){
-			pieceProcessor = new Piece_Processor();
-			boolean initializationSuccessChecker = pieceProcessor.initChunkProp(doesFileExist,peer_ID);
-			if(initializationSuccessChecker == false){
-				pieceProcessor = null;
-			}
-	
-		}
-		return pieceProcessor;
-	}
-	
-	public boolean initChunkProp(boolean isFileExists, String peerID){
+	public boolean initPieceProperties(boolean isFileExists, String peerID){
 		
 		if(PeerPropertyTokens.returnPropertyValue("PieceSize")!=null)
 			pieceSize = Integer.parseInt(PeerPropertyTokens.returnPropertyValue("PieceSize"));
 		
 			if(PeerPropertyTokens.returnPropertyValue("FileSize")!= null)
-			piecesCount = (int) Math.ceil(Integer.parseInt(PeerPropertyTokens.returnPropertyValue("FileSize")) / (pieceSize*1.0)) ;
+			numPieces = (int) Math.ceil(Integer.parseInt(PeerPropertyTokens.returnPropertyValue("FileSize")) / (pieceSize*1.0)) ;
 		
 
 		try
 		{
-			bitField = new beanClasses.bitField(piecesCount);
+			bitField = new beanClasses.bitField(numPieces);
 			
 			if(isFileExists){
 				bitField.setBits();
@@ -85,9 +74,24 @@ public class Piece_Processor {
 		  return false;
 		}	
 	}
+
 	
+	
+	synchronized public static Piece_Processor createPieceHandler(boolean doesFileExist, String peerID){
+		if(pieceProcessor == null){
+			pieceProcessor = new Piece_Processor();
+			boolean initializationSuccessChecker = pieceProcessor.initPieceProperties(doesFileExist,peerID);
+			if(initializationSuccessChecker == false){
+				pieceProcessor = null;
+			}
+	
+		}
+		return pieceProcessor;
+	}
+	
+	
+		
 	synchronized public void close(){
-		//close outputfilestream
 		try {
 			if(outputStream!= null){
 				outputStream.close();
@@ -99,7 +103,6 @@ public class Piece_Processor {
 			
 		}
 		catch (Exception e) {
-			// TODO: handle exception
 			e.printStackTrace();
 		}
 		
@@ -108,10 +111,9 @@ public class Piece_Processor {
 	
 	synchronized public pieceDetails getdata(int num){
 		
-		pieceDetails readPiece = new pieceDetails(pieceSize);
+		pieceDetails newPiece = new pieceDetails(pieceSize);
 		if(bitField.getBitFieldOn(num))
 		{
-			//have to read this piece from my own output file.
 			try{
 				byte[] bytesRead = new byte[pieceSize];
 				outputStream.seek(num*pieceSize);
@@ -122,15 +124,14 @@ public class Piece_Processor {
 					for(int i=0 ; i<data_Size ; i++){
 						newBytesRead[i] = bytesRead[i];
 					}
-					readPiece.setData(bytesRead);
+					newPiece.setData(bytesRead);
 				}else{
-					readPiece.setData(bytesRead);
+					newPiece.setData(bytesRead);
 				}
 				
-				return readPiece;
+				return newPiece;
 			}
 			catch (Exception e) {
-				// TODO: handle exception
 				e.printStackTrace();
 				return null;
 			}
@@ -168,7 +169,25 @@ public class Piece_Processor {
 		
 	}
 	
-	synchronized public int[] arrayMissingPieceNumberGetter(){
+	
+	synchronized public int[] getterAvaialablePieceNumbers(){
+
+		int i = 0, j = 0; 		
+		int[] available = new int[numPieces];
+		while( i < bitField.getSize())
+		{
+			if(bitField.getBitFieldOn(i) == true)
+			{
+				available[j] = i;
+				j++;
+			}
+			i++;								
+		}
+		return available;
+	}
+	
+	
+	synchronized public int[] getterMissingPieceNumbers(){
 	
 		int i = 0, j = 0;
 		
@@ -197,22 +216,6 @@ public class Piece_Processor {
 
 	}
 	
-	synchronized public int[] arrayAvaialablePieceNumberGetter(){
-
-		int i = 0, j = 0; 		
-		int[] available = new int[piecesCount];
-		while( i < bitField.getSize())
-		{
-			if(bitField.getBitFieldOn(i) == true)
-			{
-				available[j] = i;
-				j++;
-			}
-			i++;								
-		}
-		return available;
-	}
-	
 	synchronized public boolean fileDownloadCompletionCheck(){
 		return bitField.checkIfFileDownloadComplete();
 	}
@@ -220,5 +223,4 @@ public class Piece_Processor {
 	public beanClasses.bitField returnBitFieldProcessor(){
 		return bitField;
 	}
-
 }

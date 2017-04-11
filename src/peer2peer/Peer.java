@@ -17,37 +17,21 @@ public class Peer implements Runnable
 	public static final String LOGGER_PREFIX = Peer.class.getSimpleName();
 	
 	public String peerID;
-
 	private Socket neighborSocket;
-	
 	private ObjectInputStream InputDataStream;
-	
 	public ObjectOutputStream OutputDataStream;
-	
-	public boolean choked;
-	
-	public boolean peerChoked;
-	
-	public boolean handshakeACKReceived = false;
-	
-	public boolean handShakeMessageSent = false;
-	
-	public boolean chunkRequestStarted = false;
-	
 	public messageID messageIdentifier;
-
 	public Starter threadController;
-	
 	public MessageSenderPeer peerMessageSender;
-	
 	public requestPiece pieceRequester;
-	
+	public boolean choked;
+	public boolean peerChoked;
+	public boolean handshakeACKReceived = false;
+	public boolean handShakeMessageSent = false;
+	public boolean chunkRequestStarted = false;
 	public boolean pieceMessageForLastMessageReceived = true;
-	
 	public long startTime;
-	
 	public int dataSize;
-	
 	public logger logs = null;
 	
 	private Peer()
@@ -55,69 +39,69 @@ public class Peer implements Runnable
 		
 	}
 	
-	synchronized public static Peer createPeerConnection(Socket socket, Starter controller)
+	synchronized public static Peer newConnection(Socket socket, Starter controller)
 	{
-		Peer peerHandler = new Peer();
+		Peer newPeer = new Peer();
 		
-		peerHandler.neighborSocket = socket;
-		peerHandler.threadController = controller;
+		newPeer.neighborSocket = socket;
+		newPeer.threadController = controller;
 		
-		boolean isInitialized = false;
+		boolean isInit = false;
 
-		if(peerHandler.neighborSocket == null)
+		if(newPeer.neighborSocket == null)
 		{
-			peerHandler.close();
-			peerHandler = null;
+			newPeer.close();
+			newPeer = null;
 			return null;
 		}
 		
 		try 
 		{	
-			peerHandler.OutputDataStream = new ObjectOutputStream(peerHandler.neighborSocket.getOutputStream());
-			peerHandler.InputDataStream = new ObjectInputStream(peerHandler.neighborSocket.getInputStream());			
+			newPeer.OutputDataStream = new ObjectOutputStream(newPeer.neighborSocket.getOutputStream());
+			newPeer.InputDataStream = new ObjectInputStream(newPeer.neighborSocket.getInputStream());			
 		}
 		catch (IOException e)
 		{
 			e.printStackTrace();
-			peerHandler.close();
-			peerHandler = null;
+			newPeer.close();
+			newPeer = null;
 			return null;
 		}
 		
-		peerHandler.messageIdentifier = messageID.createIdentfier();
+		newPeer.messageIdentifier = messageID.createIdentfier();
 		
-		if(peerHandler.messageIdentifier == null)
+		if(newPeer.messageIdentifier == null)
 		{
-			peerHandler.close();
+			newPeer.close();
 			return null;
 		}
 		
 		if(controller == null)
 		{
-			peerHandler.close();
+			newPeer.close();
 			return null;
 		}
 		
-		peerHandler.peerMessageSender = MessageSenderPeer.instanceCreate(peerHandler.OutputDataStream,peerHandler);
+		newPeer.peerMessageSender = MessageSenderPeer.instanceCreate(newPeer.OutputDataStream,newPeer);
 		
-		if(peerHandler.peerMessageSender == null)
+		if(newPeer.peerMessageSender == null)
 		{
-			peerHandler.close();
+			newPeer.close();
 			return null;
 		}
 		
-		new Thread(peerHandler.peerMessageSender).start();
+		new Thread(newPeer.peerMessageSender).start();
 
-		peerHandler.pieceRequester = requestPiece.createInstance(controller, peerHandler);
+		newPeer.pieceRequester = requestPiece.createInstance(controller, newPeer);
 
-		peerHandler.logs = controller.getLogger();
-		isInitialized=true;
+		newPeer.logs = controller.getLogger();
+		isInit=true;
 		
-		if(isInitialized == false){
-			peerHandler.close();
-			peerHandler = null;
+		if(isInit == false){
+			newPeer.close();
+			newPeer = null;
 		}
-		return peerHandler;
+		return newPeer;
 	}
 	
 	
@@ -138,12 +122,12 @@ public class Peer implements Runnable
 	
 	public void run()
 	{
-		byte[] rawData = new byte[Constants.RAW_DATA_SIZE];
+		byte[] data = new byte[Constants.RAW_DATA_SIZE];
 		ByteBuffer buffer = ByteBuffer.allocate(Constants.MAX_MESSAGE_SIZE);
 		
 		if(peerID != null)
 		{
-			sendHandshakeMessage();
+			sendHandshakeMsg();
 		}
 
 		try 
@@ -154,7 +138,7 @@ public class Peer implements Runnable
 				
 				int returnType = message.returnMsgType();
 				
-				messageDefine peer2PeerMessage;
+				messageDefine peer2PeerMsg;
 				
 				switch (returnType) 
 				{
@@ -162,7 +146,7 @@ public class Peer implements Runnable
 						if(message instanceof handshake)
 						{						
 							handshake handshakeMessage = (handshake)message;
-							checkHandshakeMessage(handshakeMessage);
+							checkHandshakeMsg(handshakeMessage);
 						}
 						else
 						{
@@ -171,46 +155,46 @@ public class Peer implements Runnable
 						break;
 					
 					case Constants.MESSAGE_REQUEST:
-						peer2PeerMessage = (messageDefine)message; 
-						handleRequestMessage(peer2PeerMessage);
+						peer2PeerMsg = (messageDefine)message; 
+						handleRequestMsg(peer2PeerMsg);
 						break;
 					
 					case Constants.MESSAGE_BITFIELD:
-						handleBFMessage((messageDefine)message);
+						handleP2PMsg((messageDefine)message);
 						break;
 					
 					case Constants.MESSAGE_CHOKE:
-						peer2PeerMessage = (messageDefine)message;
+						peer2PeerMsg = (messageDefine)message;
 						peerChoked=true;
 						break;
 					
 					case Constants.MESSAGE_HAVE:
-						peer2PeerMessage = (messageDefine)message;
-						handleHaveMessage(peer2PeerMessage);
+						peer2PeerMsg = (messageDefine)message;
+						handleHaveMsg(peer2PeerMsg);
 						break;
 						
 					case Constants.MESSAGE_INTERESTED:
-						peer2PeerMessage = (messageDefine)message;
-						receiveInterestedMessage(peer2PeerMessage);
+						peer2PeerMsg = (messageDefine)message;
+						receiveInterestMsg(peer2PeerMsg);
 						break;
 					
 					case Constants.MESSAGE_NOT_INTERESTED:
-						peer2PeerMessage = (messageDefine)message;
-						receiveNotInterestedMessage(peer2PeerMessage);
+						peer2PeerMsg = (messageDefine)message;
+						receiveNoInterestMsg(peer2PeerMsg);
 						break;
 						
 					case Constants.MESSAGE_PIECE:
-						peer2PeerMessage = (messageDefine)message;
-						receivePieceMessage(peer2PeerMessage);
+						peer2PeerMsg = (messageDefine)message;
+						getPieceMsg(peer2PeerMsg);
 						break;
 						
 					case Constants.MESSAGE_UNCHOKE:
-						peer2PeerMessage = (messageDefine)message;
+						peer2PeerMsg = (messageDefine)message;
 						peerChoked = false;
 						logs.info("Peer ["+threadController.getPeerID()+"] is unchoked by ["+peerID+"]");
 						try 
 						{
-							pieceRequester.messageQueue.put(peer2PeerMessage);
+							pieceRequester.msgQ.put(peer2PeerMsg);
 						}
 						catch (InterruptedException e)
 						{
@@ -219,7 +203,7 @@ public class Peer implements Runnable
 						break;
 					
 					case Constants.MESSAGE_SHUTDOWN:
-						messageDefine peer2peerMessage = (messageDefine)message;
+						peer2PeerMsg = (messageDefine)message;
 						threadController.peerList.add(peerID);
 						break;
 				}
@@ -242,18 +226,17 @@ public class Peer implements Runnable
 	}
 	
 	
-	public synchronized boolean sendHandshakeBitField()
+	public synchronized boolean sendBitFieldForHandshake()
 	{
 		try 
 		{
+			handshake msg = (handshake)InputDataStream.readObject();
 			
-			handshake message = (handshake)InputDataStream.readObject();
-			
-			peerID = message.getPeerID();
+			peerID = msg.getPeerID();
 
 			Thread.sleep(4000);
 			
-			checkHandshakeMessage(message);	
+			checkHandshakeMsg(msg);	
 
 			return true;
 			
@@ -267,18 +250,18 @@ public class Peer implements Runnable
 	}
 	
 	
-	private void receivePieceMessage(messageDefine pieceMessage)
+	private void getPieceMsg(messageDefine pieceMsg)
 	{
-		threadController.saveDownloadedPiece(pieceMessage, peerID);
-		threadController.sendHavePeiceMessage(pieceMessage.getPieceIndex(),peerID);
+		threadController.saveDownloadedPiece(pieceMsg, peerID);
+		threadController.sendHavePeiceMessage(pieceMsg.getPieceIndex(),peerID);
 		
-		dataSize += pieceMessage.getData().getSize();
+		dataSize += pieceMsg.getData().getSize();
 		
-		setPieceMessageForPreviousMessageReceived(true);
+		setLastPieceMessageReceived(true);
 
 		try 
 		{
-			pieceRequester.messageQueue.put(pieceMessage);
+			pieceRequester.msgQ.put(pieceMsg);
 		} 
 		catch (InterruptedException e) 
 		{
@@ -287,11 +270,11 @@ public class Peer implements Runnable
 	}
 
 	
-	private void handleBFMessage(messageDefine peer2PeerMessage) 
+	private void handleP2PMsg(messageDefine peer2PeerMsg) 
 	{	
 		try 
 		{
-			pieceRequester.messageQueue.put(peer2PeerMessage);
+			pieceRequester.msgQ.put(peer2PeerMsg);
 			
 			if(handshakeACKReceived == true && handShakeMessageSent == true && chunkRequestStarted == false)
 			{
@@ -308,15 +291,15 @@ public class Peer implements Runnable
 	}
 
 	
-	private void checkHandshakeMessage(handshake handshakeMessage)
+	private void checkHandshakeMsg(handshake handshakeMsg)
 	{	
-		peerID = handshakeMessage.getPeerID();
+		peerID = handshakeMsg.getPeerID();
 		sendBitField();
 		
 		if(handShakeMessageSent == false)
 		{
-			logs.info("Peer "+threadController.getPeerID()+" is connected from Peer "+peerID+".");
-			sendHandshakeMessage();
+			logs.info("Peer "+threadController.getPeerID()+" is now connected to Peer "+peerID+".");
+			sendHandshakeMsg();
 		}
 		
 		handshakeACKReceived = true;
@@ -331,11 +314,11 @@ public class Peer implements Runnable
 	}
 	
 
-	private void handleRequestMessage(messageDefine requestMessage)
+	private void handleRequestMsg(messageDefine requestMsg)
 	{
 		if(choked == false)
 		{
-			messageDefine pieceMessage = threadController.getPieceMessage(requestMessage.getPieceIndex());
+			messageDefine pieceMessage = threadController.getPieceMessage(requestMsg.getPieceIndex());
 			
 			if(pieceMessage != null)
 			{
@@ -353,13 +336,13 @@ public class Peer implements Runnable
 	}
 	
 	
-	private void handleHaveMessage(messageDefine haveMessage)
+	private void handleHaveMsg(messageDefine haveMsg)
 	{
-		logs.info("Peer ["+threadController.getPeerID()+"] received the 'have' message from ["+peerID+"] for the piece"+haveMessage.getPieceIndex());
+		logs.info("Peer ["+threadController.getPeerID()+"] received 'HAVE' message from ["+peerID+"] for piece: "+haveMsg.getPieceIndex());
 		
 		try 
 		{
-			pieceRequester.messageQueue.put(haveMessage);
+			pieceRequester.msgQ.put(haveMsg);
 		}
 		catch (InterruptedException e) 
 		{
@@ -368,23 +351,23 @@ public class Peer implements Runnable
 	}
 	
 	
-	private void receiveInterestedMessage(messageDefine interestedMessage)
+	private void receiveInterestMsg(messageDefine interestedMessage)
 	{
-		logs.info("Peer ["+threadController.getPeerID()+"] received the 'interested' message from ["+peerID+"]");
+		logs.info("Peer ["+threadController.getPeerID()+"] received 'INTERESTED' message from ["+peerID+"]");
 	}
 	
 	
-	private void receiveNotInterestedMessage(messageDefine message)
+	private void receiveNoInterestMsg(messageDefine message)
 	{
-		logs.info("Peer ["+threadController.getPeerID()+"] received the 'not interested' message from ["+peerID+"]");
+		logs.info("Peer ["+threadController.getPeerID()+"] received 'NOT INTERESTED' message from ["+peerID+"]");
 	}
 	
 	
-	synchronized boolean sendHandshakeMessage()
+	synchronized boolean sendHandshakeMsg()
 	{
 		try 
 		{
-			handshake message = handshake.createInstance();
+			handshake message = handshake.createNewInstance();
 			message.setPeerID(threadController.getPeerID());
 			peerMessageSender.messageSend(message);
 			handShakeMessageSent = true;
@@ -415,7 +398,7 @@ public class Peer implements Runnable
 	}
 	
 	
-	public void sendInterestedMessage(messageDefine interestedMessage)
+	public void sendInterestMsg(messageDefine interestedMessage)
 	{
 		try
 		{
@@ -431,11 +414,11 @@ public class Peer implements Runnable
 	}
 	
 	
-	public boolean checkIfDownloadComplete()
+	public boolean checkDownload()
 	{
 		if(chunkRequestStarted == true)
 		{
-			return pieceRequester.checkIfNeighbourDownloadFile();
+			return pieceRequester.checkNeighbourDownloadComplete();
 		}
 		else
 		{
@@ -444,7 +427,7 @@ public class Peer implements Runnable
 	}
 	
 	
-	public void sendNotInterestedMessage(messageDefine notInterestedMessage)
+	public void sendNoInterestMsg(messageDefine notInterestedMessage)
 	{
 		try 
 		{
@@ -458,7 +441,7 @@ public class Peer implements Runnable
 	}
 	
 	
-	public void sendRequestMessage(messageDefine requestMessage)
+	public void sendRequestMsg(messageDefine requestMessage)
 	{
 		try 
 		{
@@ -474,7 +457,7 @@ public class Peer implements Runnable
 	}
 	
 	
-	public void sendChokeMessage(messageDefine chokeMessage) 
+	public void sendChokeMsg(messageDefine chokeMessage) 
 	{		
 		try 
 		{
@@ -494,7 +477,7 @@ public class Peer implements Runnable
 	}
 	
 	
-	public void sendUnchokeMessage(messageDefine unchokeMessage)
+	public void sendUnchokeMsg(messageDefine unchokeMessage)
 	{
 		try 
 		{
@@ -515,11 +498,11 @@ public class Peer implements Runnable
 	}
 	
 	
-	public void sendHaveMessage(messageDefine haveMessage) 
+	public void sendHaveMsg(messageDefine haveMsg) 
 	{
 		try 
 		{
-			peerMessageSender.messageSend(haveMessage);
+			peerMessageSender.messageSend(haveMsg);
 		}
 		catch (InterruptedException e) 
 		{
@@ -528,11 +511,11 @@ public class Peer implements Runnable
 	}
 	
 	
-	public void sendShutdownMessage(messageDefine shutdownMessage)
+	public void sendShutDownMsg(messageDefine shutdownMsg)
 	{
 		try 
 		{
-			peerMessageSender.messageSend(shutdownMessage);
+			peerMessageSender.messageSend(shutdownMsg);
 		}
 		catch (Exception e) 
 		{
@@ -553,19 +536,19 @@ public class Peer implements Runnable
 	}
 	
 	
-	public boolean isPieceMessageForPreviousMessageReceived() 
+	public boolean lastPieceMessageReceived() 
 	{
 		return pieceMessageForLastMessageReceived;
 	}
 
 	
-	public void setPieceMessageForPreviousMessageReceived(boolean isPieceMessageForPreviousMessageReceived)
+	public void setLastPieceMessageReceived(boolean isPieceMessageForPreviousMessageReceived)
 	{
 		this.pieceMessageForLastMessageReceived = isPieceMessageForPreviousMessageReceived;
 	}
 	
 	
-	public double getDownloadSpeed()
+	public double getDownSpeed()
 	{
 		long timePeriod = System.currentTimeMillis() - startTime;
 		if(timePeriod != 0)
@@ -588,56 +571,5 @@ public class Peer implements Runnable
 	public synchronized void setChunkRequestedStarted(boolean isChunkRequestedStarted) 
 	{
 		this.chunkRequestStarted = isChunkRequestedStarted;
-	}	
-	
-	public class PeerDetail 
-	{	
-		private String peerID;
-		
-		private int peerPort;
-		
-		private boolean fileExists;
-		
-		private String peerAddress;
-
-		public String getPeerID() 
-		{
-			return peerID;
-		}
-
-		public void setPeerID(String peerID)
-		{
-			this.peerID = peerID;
-		}
-
-		public int getPeerPort() 
-		{
-			return peerPort;
-		}
-
-		public void setPeerPort(int peerPort) 
-		{
-			this.peerPort = peerPort;
-		}
-
-		public boolean fileExist() 
-		{
-			return fileExists;
-		}
-
-		public void setFileAvailability(boolean isFile)
-		{
-			this.fileExists = isFile;
-		}
-
-		public String getPeerAddress() 
-		{
-			return peerAddress;
-		}
-
-		public void setPeerAddress(String peerAddress)
-		{
-			this.peerAddress = peerAddress;
-		}
 	}
 }

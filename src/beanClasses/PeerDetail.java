@@ -2,14 +2,12 @@ package beanClasses;
 
 public class PeerDetail 
 {	
-	private String peerID;
-	
+	private String peerID;	
 	private int peerPort;
-	
 	private boolean fileExists;
-	
 	private String peerAddress;
 
+	
 	public String getPeerID() 
 	{
 		return peerID;

@@ -18,32 +18,28 @@ import peer2peer.*;
 public class chokeUnchoke implements Runnable 
 {
 
-	private static chokeUnchoke Handler = null;
-
-
+	private static chokeUnchoke chokeUnchokeHandler = null;
 	public ScheduledFuture<?> task = null;
-
 	private ScheduledExecutorService taskscheduler = null;
-
 	private Starter threadController = null;
-	
-	private logger logger = null;
+	private logger logs = null;
 
+	
 	public static synchronized chokeUnchoke createInstance(Starter controller)
 	{
-		if (Handler == null) 
+		if (chokeUnchokeHandler == null) 
 		{
 			if (controller == null) 
 			{
 				return null;
 			}
 
-			Handler = new chokeUnchoke();
-			Handler.taskscheduler = Executors.newScheduledThreadPool(1);	
-			Handler.logger = controller.getLogger();
-			Handler.threadController = controller;
+			chokeUnchokeHandler = new chokeUnchoke();
+			chokeUnchokeHandler.taskscheduler = Executors.newScheduledThreadPool(1);	
+			chokeUnchokeHandler.logs = controller.getLogger();
+			chokeUnchokeHandler.threadController = controller;
 		}
-		return Handler;
+		return chokeUnchokeHandler;
 	}
 
 
@@ -128,7 +124,7 @@ public class chokeUnchoke implements Runnable
 
 			log +="]";
 			
-			logger.info(log);
+			logs.info(log);
 			
 			threadController.unchokePeers(unchoked);
 			threadController.chokeThePeers(choked);

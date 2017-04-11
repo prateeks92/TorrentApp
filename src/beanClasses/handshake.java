@@ -1,4 +1,4 @@
-package messaging;
+package beanClasses;
 
 import beanClasses.*;
 import property.*;
@@ -8,33 +8,27 @@ import property.*;
 
 public class handshake implements message
 {
-	private String peerID;
-	
-	private static int countInstance;
-	
+	private String peerID;	
+	private static int numInstance;
 	private int messageNumber;
 	
-	public void setPeerID(String peerID) 
-	{
-		this.peerID = peerID;
-	}
 
 	private handshake()
 	{
 		
 	}
 	
-	public static handshake createInstance()
+	public static handshake createNewInstance()
 	{
 		handshake handshakeMessage = new handshake();
 		
 		boolean success = true;
 		
-		countInstance++;
+		numInstance++;
 		
 		if(success==true)
 		{
-			handshakeMessage.updateMessageNumber();
+			handshakeMessage.updateMsgNumber();
 		}
 		
 		if(success == false)
@@ -45,9 +39,14 @@ public class handshake implements message
 	}
 	
 	
-	private void updateMessageNumber()
+	public void setPeerID(String peerID) 
 	{
-			messageNumber=countInstance;
+		this.peerID = peerID;
+	}
+	
+	private void updateMsgNumber()
+	{
+			messageNumber=numInstance;
 	}
 	
 	

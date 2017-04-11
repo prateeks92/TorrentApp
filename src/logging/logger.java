@@ -20,6 +20,7 @@ public class logger extends Logger
 	private String peerID;	
 	private SimpleDateFormat dateTime = null;
 	
+	
 	public logger(String peerID, String logFN, String name) {
 		super(name, null);
 		this.logFN= logFN;
@@ -75,17 +76,17 @@ public class logger extends Logger
 	{
 		if (log == null) 
 		{
-			String directory = "" + Constants.LOG_DIR;
-			File file = new File(directory);
+			String dir = "" + Constants.LOG_DIR;
+			File file = new File(dir);
 			file.mkdir();
-			log = new logger(peerID, directory + "/" + Constants.LOG_NAME_START + peerID + ".log", Constants.LOGGER_NAME);
+			log = new logger(peerID, dir + "/" + Constants.LOG_NAME_START + peerID + ".log", Constants.LOGGER_NAME);
 			try
 			{
 				log.init();
 			} catch (Exception e) {
 				log.close();
 				log = null;
-				System.out.println("Unable to initialize logger");
+				System.out.println("Logger Not Initialized");
 				e.printStackTrace();
 			}
 		}

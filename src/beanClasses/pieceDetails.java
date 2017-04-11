@@ -7,11 +7,8 @@ public class pieceDetails implements Serializable
 {
 	private byte[] pieceData;
 	int size;
+
 	
-	public pieceDetails(int size)
-	{
-		this.size = size;
-	}
 
 	public byte[] getData() 
 	{
@@ -33,5 +30,10 @@ public class pieceDetails implements Serializable
 		{
 			return pieceData.length;
 		}		
+	}
+	
+	public pieceDetails(int size)
+	{
+		this.size = size;
 	}
 }

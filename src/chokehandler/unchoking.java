@@ -12,39 +12,36 @@ import peer2peer.*;
 public class unchoking implements Runnable{
 	
 	public ScheduledFuture<?> task = null;
-		
     public ScheduledExecutorService task_scheduler = null;
-	
-    private static unchoking Handler = null;
-    
+    private static unchoking unchokingHandler = null;
     private Starter threadController = null;
+    private logger logs = null;
     
-    private logger logger = null;
-        
+    
     public static synchronized unchoking createInstance(Starter controller)
     {
-    	if(Handler == null)
+    	if(unchokingHandler == null)
     	{
     		if(controller == null)
     		{
     			return null;
     		}
     		    		
-    		Handler = new unchoking();
-    		boolean isInitialized = Handler.init();
+    		unchokingHandler = new unchoking();
+    		boolean isInitialized = unchokingHandler.init();
     		
     		if(isInitialized == false)
     		{
-    			Handler.task.cancel(true);
-    			Handler = null;
+    			unchokingHandler.task.cancel(true);
+    			unchokingHandler = null;
     			return null;
     		}
     		
-    		Handler.threadController = controller;
-    		Handler.logger = controller.getLogger();
+    		unchokingHandler.threadController = controller;
+    		unchokingHandler.logs = controller.getLogger();
     	}	
     	
-    	return Handler;
+    	return unchokingHandler;
     }
     
     private boolean init()
@@ -63,11 +60,11 @@ public class unchoking implements Runnable{
 			threadController.unchokePeer(choked.get(random.nextInt(choked.size())));
 		}
 		
-		threadController.checkAllPeersFileDownloadComplete();
+		threadController.checkIfDownloaded();
 		
 		if(threadController.msgHandler.fileDownloadCompletionCheck() == true)
 		{
-			logger.info("Download completed for Peer ["+threadController.getPeerID()+"].");
+			logs.info("Download completed for Peer ["+threadController.getPeerID()+"].");
 			threadController.sendShutdownSignal();
 		};
 	}
