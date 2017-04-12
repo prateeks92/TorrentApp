@@ -166,6 +166,7 @@ public class Peer implements Runnable
 					case Constants.MESSAGE_CHOKE:
 						peer2PeerMsg = (messageDefine)message;
 						peerChoked=true;
+						logs.info("Peer ["+threadController.getPeerID()+"] is choked by ["+peerID+"]");
 						break;
 					
 					case Constants.MESSAGE_HAVE:
